@@ -1,0 +1,134 @@
+buildscript {
+	ext {
+		springBootVersion = '2.0.0.RELEASE'
+		kafkaVersion = '2.3.0'
+	}
+	repositories {
+		mavenCentral()
+		maven { url "https://repo.spring.io/plugins-release" }
+	}
+	dependencies {
+//		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		classpath("io.spring.gradle:propdeps-plugin:0.0.10.RELEASE")
+	}
+}
+
+//plugins {
+//	id 'java-library'
+//	id 'maven-publish'
+//}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+//apply plugin: 'org.springframework.boot'
+//apply plugin: 'io.spring.dependency-management'
+apply plugin: "propdeps"
+apply plugin: 'propdeps-idea'
+
+group = 'com.github.jeremylford'
+version = '0.0.1-SNAPSHOT'
+//sourceCompatibility = 1.8
+
+
+
+defaultTasks("clean", "build")
+
+compileJava {
+	sourceCompatibility = 1.8  // can be switched to 11 for testing
+	targetCompatibility = 1.8
+	options.encoding = "UTF-8"
+}
+
+repositories {
+	mavenCentral()
+//	mavenLocal()
+}
+
+//configurations.all {
+//	exclude group: "commongs-logging", module: "commongs-logging"
+//	exclude group: "log4j"
+//	exclude group: "org.slf4j", module: "slf4j-log4j12"
+//}
+
+//processResources {
+//	expand(project.properties)
+//}
+
+
+dependencies {
+	implementation("org.springframework.boot:spring-boot-starter-jersey:${springBootVersion}")
+	implementation("org.springframework.boot:spring-boot-actuator:${springBootVersion}")
+	implementation("org.springframework.boot:spring-boot-actuator-autoconfigure:${springBootVersion}")
+//	implementation('org.springframework.kafka:spring-kafka')
+//	implementation('org.springframework.cloud:spring-cloud-starter-config:2.0.1.RELEASE')
+
+	implementation group: 'org.apache.kafka', name: 'kafka_2.12', version: "${kafkaVersion}"
+	implementation group: 'org.apache.kafka', name: 'connect-api', version: "${kafkaVersion}"
+	implementation group: 'org.apache.kafka', name: 'connect-runtime', version: "${kafkaVersion}"
+	implementation group: 'org.apache.kafka', name: 'kafka-clients', version: "${kafkaVersion}"
+	compile group: 'io.micrometer', name: 'micrometer-core', version: '1.2.1'
+
+
+
+	optional("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}")
+	testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+//	testImplementation("org.springframework.kafka:spring-kafka-test:${springBootVersion}")
+	testImplementation("junit:junit:4.12")
+	
+	
+}
+
+task sourcesJar(type: Jar) {
+	from sourceSets.main.allJava
+//	archiveClassifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+	from javadoc
+//	archiveClassifier = 'javadoc'
+}
+
+publishing {
+	publications {
+		binary(MavenPublication) {
+			from components.java
+		}
+//		binaryAndSources(MavenPublication) {
+//			from components.java
+//			artifact sourcesJar
+//		}
+	}
+
+	repositories {
+		maven {
+			name = 'spring-kafka-connect-starter'
+			url = "file://${buildDir}/repo"
+		}
+	}
+}
+
+/*
+publishing {
+    publications {
+        binary(MavenPublication) {
+            from components.java
+        }
+        binaryAndSources(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+        }
+    }
+    repositories {
+        // change URLs to point to your repos, e.g. http://my.org/repo
+        maven {
+            name = 'external'
+            url = "$buildDir/repos/external"
+        }
+        maven {
+            name = 'internal'
+            url = "$buildDir/repos/internal"
+        }
+    }
+}
+ */
