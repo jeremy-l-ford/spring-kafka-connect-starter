@@ -16,9 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.jeremylford.spring.kafkaconnect;
+package com.github.jeremylford.spring.kafkaconnect.configuration;
 
-import com.github.jeremylford.spring.kafkaconnect.configuration.KafkaConnectProperties;
+import com.github.jeremylford.spring.kafkaconnect.ContextRefreshedListener;
+import com.github.jeremylford.spring.kafkaconnect.HerderWithLifeCycle;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.connect.connector.policy.ConnectorClientConfigOverridePolicy;

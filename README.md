@@ -95,10 +95,13 @@ If your plugins do not have any version conflicts, plugins can be bundled with t
 ### Plugin Path
 If your plugins needs to be Classloader isolated, you can configure the plugin path and install connector/transforms.  See https://cwiki.apache.org/confluence/display/KAFKA/KIP-146+-+Classloading+Isolation+in+Connect.
 
-## Actuator
+## Spring Actuator
 
 This starter supplies a health indicator the checks the connection plus provides details on the installed plugins.
 
+When using Jersey with Spring, the actuator endpoint can end up be served/filtered by the jersey.
+See https://github.com/spring-projects/spring-boot/issues/17523 on how to have actuator endpoints served by Spring MVC.  
+
 ## REST API
 
-The standard Kafka Connect REST api is available under the configured 
+The standard Kafka Connect REST api is available under the configured jersey application path.
