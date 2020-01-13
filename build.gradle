@@ -43,13 +43,18 @@ compileJava {
 repositories {
 	mavenCentral()
 //	mavenLocal()
+
+	maven {
+		url "https://packages.confluent.io/maven"
+	}
 }
 
-//configurations.all {
+configurations.all {
 //	exclude group: "commongs-logging", module: "commongs-logging"
 //	exclude group: "log4j"
 //	exclude group: "org.slf4j", module: "slf4j-log4j12"
-//}
+//	exclude group: "org.apache.kafka", module: "kafka-clients"
+}
 
 //processResources {
 //	expand(project.properties)
@@ -63,16 +68,19 @@ dependencies {
 //	implementation('org.springframework.kafka:spring-kafka')
 //	implementation('org.springframework.cloud:spring-cloud-starter-config:2.0.1.RELEASE')
 
-	implementation group: 'org.apache.kafka', name: 'kafka_2.12', version: "${kafkaVersion}"
+	implementation group: 'org.apache.kafka', name: 'kafka_2.13', version: "${kafkaVersion}"
 	implementation group: 'org.apache.kafka', name: 'connect-api', version: "${kafkaVersion}"
 	implementation group: 'org.apache.kafka', name: 'connect-runtime', version: "${kafkaVersion}"
 	implementation group: 'org.apache.kafka', name: 'kafka-clients', version: "${kafkaVersion}"
 	compile group: 'io.micrometer', name: 'micrometer-core', version: '1.2.1'
 
+//	implementation group: "io.confluent", name: "rest-utils", version: "${confluentVersion}"
+	runtimeOnly group: "org.eclipse.jetty", name: "jetty-util", version: "9.4.19.v20190610"
 
 
 	optional("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}")
 	testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+//	testImplementation group: 'org.apache.kafka', name: 'kafka_2.12', version: "${kafkaVersion}"
 //	testImplementation("org.springframework.kafka:spring-kafka-test:${springBootVersion}")
 	testImplementation("junit:junit:4.12")
 

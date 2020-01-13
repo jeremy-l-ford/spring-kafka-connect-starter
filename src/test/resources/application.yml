@@ -1,9 +1,10 @@
 spring:
   application:
     name: myapp
-#  jersey:
-#    application-path: /connect-api
-#    type: filter
+  jersey:
+    application-path: /connect-api
+    type: filter
+
 
   kafka:
     connect:
@@ -81,4 +82,12 @@ spring:
 #management:
 #  endpoints:
 #    web:
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      enabled: true
 #      base-path: /actuator

@@ -29,15 +29,20 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletProperties;
 import org.glassfish.jersey.servlet.init.FilterUrlMappingsProviderImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.jersey.JerseyAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import javax.ws.rs.ApplicationPath;
 
+@Configuration
+@AutoConfigureBefore(JerseyAutoConfiguration.class)
 @ApplicationPath("/connect-api")
-public class RESTConfiguration extends ResourceConfig {
+public class JerseyConfiguration extends ResourceConfig {
 
     @Autowired
-    public RESTConfiguration(Herder herder, WorkerConfig config) {
+    public JerseyConfiguration(Herder herder, WorkerConfig config) {
 //        property(ServletProperties.FILTER_CONTEXT_PATH, "/connect-api/*");
         register(new JacksonJsonProvider());
 

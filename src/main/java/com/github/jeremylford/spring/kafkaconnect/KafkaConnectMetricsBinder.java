@@ -9,6 +9,7 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.TimeGauge;
 import io.micrometer.core.instrument.binder.BaseUnits;
 import io.micrometer.core.instrument.binder.MeterBinder;
+import org.apache.kafka.connect.runtime.ConnectMetricsRegistry;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.ListenerNotFoundException;
@@ -71,99 +72,111 @@ public class KafkaConnectMetricsBinder implements MeterBinder, AutoCloseable {
 
     @Override
     public void bindTo(MeterRegistry registry) {
+
+        //from WorkerCoordinatorMetrics
         registerMetricsEventually("connect-coordinator-metrics", (o, tags) -> {
-            // metrics reported per consumer, topic and partition
-            if (tags.stream().anyMatch(t -> t.getKey().equals("topic"))) {
+            System.out.println("tagx " + tags);
+
+            // metrics reported per client-id
+            if (tags.stream().anyMatch(t -> t.getKey().equals("client-id"))) {
                 registerGaugeForObject(registry, o, "assigned-connectors", tags, "The latest lag of the partition", "connectors");
                 registerGaugeForObject(registry, o, "assigned-tasks", tags, "The average lag of the partition", "tasks");
                 registerGaugeForObject(registry, o, "heartbeat-rate", tags, "", "records");
 //                registerTimeGaugeForObject(registry, o, "heartbeat-response-time-max", tags, "", "records");
                 registerFunctionCounterForObject(registry, o, "heartbeat-total", tags, "", "records");
                 registerGaugeForObject(registry, o, "join-rate", tags, "", "records");
-                registerGaugeForObject(registry, o, "join-time-avg", tags, "", "records");
-                registerGaugeForObject(registry, o, "join-time-max", tags, "", "records");
+                registerTimeGaugeForObject(registry, o, "join-time-avg", tags, "");
+                registerTimeGaugeForObject(registry, o, "join-time-max", tags, "");
                 registerFunctionCounterForObject(registry, o, "join-total", tags, "", "records");
 
                 registerGaugeForObject(registry, o, "last-hearteat-seconds-ago", tags, "", "records");
                 registerGaugeForObject(registry, o, "sync-rate", tags, "", "records");
-                registerGaugeForObject(registry, o, "sync-time-avg", tags, "", "records");
-                registerGaugeForObject(registry, o, "sync-time-max", tags, "", "records");
+                registerTimeGaugeForObject(registry, o, "sync-time-avg", tags, "");
+                registerTimeGaugeForObject(registry, o, "sync-time-max", tags, "");
                 registerFunctionCounterForObject(registry, o, "sync-total", tags, "", "records");
-                // metrics reported just per consumer
             }
         });
 
+        //from WorkerCoordinatorMetrics/Selector, //TODO: optional?
         registerMetricsEventually("connect-metrics", (o, tags) -> {
-            // metrics reported per consumer, topic and partition
+            // metrics reported per client.id
 
-            registerGaugeForObject(registry, o, "connection-close-rate", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "connection-close-total", tags, "The latest lag of the partition", "connections");
+            registerGaugeForObject(registry, o, "connection-close-rate", tags, "connections closed rate", "connections");
+            registerFunctionCounterForObject(registry, o, "connection-close-total", tags, "connections closed total", "connections");
             registerGaugeForObject(registry, o, "connection-count", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "connection-creation-rate", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "connection-creation-total", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "failed-authentication-rate", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "failed-authentication-total", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "failed-reauthentication-rate", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "failed-reauthentication-total", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "incoming-byte-rate", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "incoming-byte-total", tags, "The latest lag of the partition", "connections");
+            registerGaugeForObject(registry, o, "connection-creation-rate", tags, "new connections established rate", "connections");
+            registerFunctionCounterForObject(registry, o, "connection-creation-total", tags, "new connections established total", "connections");
+            registerGaugeForObject(registry, o, "failed-authentication-rate", tags, "connections with failed authentication rate", "authentication");
+            registerFunctionCounterForObject(registry, o, "failed-authentication-total", tags, "connections with failed authentication total", "authentication");
+            registerGaugeForObject(registry, o, "failed-reauthentication-rate", tags, "failed re-authentication of connections rate", "authentication");
+            registerFunctionCounterForObject(registry, o, "failed-reauthentication-total", tags, "failed re-authentication of connections total", "authentication");
+            registerGaugeForObject(registry, o, "incoming-byte-rate", tags, "The latest lag of the partition", BaseUnits.BYTES);
+            registerFunctionCounterForObject(registry, o, "incoming-byte-total", tags, "The latest lag of the partition", BaseUnits.BYTES);
             registerGaugeForObject(registry, o, "io-ratio", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "io-time-ns-avg", tags, "The latest lag of the partition", "connections");
+            registerTimeGaugeForObject(registry, o, "io-time-ns-avg", tags, "The average length of time for I/O per select call in nanoseconds.");
             registerGaugeForObject(registry, o, "io-wait-ratio", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "io-wait-time-ns-avg", tags, "The latest lag of the partition", "connections");
+            registerTimeGaugeForObject(registry, o, "io-wait-time-ns-avg", tags, "The average length of time the I/O thread spent waiting for a socket ready for reads or writes in nanoseconds.");
             registerFunctionCounterForObject(registry, o, "io-waittime-total", tags, "The latest lag of the partition", "connections");
             registerGaugeForObject(registry, o, "iotime-total", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "network-io-rate", tags, "The latest lag of the partition", "connections");
+            registerGaugeForObject(registry, o, "network-io-rate", tags, "network operations (reads or writes) on all connections", "connections");
             registerFunctionCounterForObject(registry, o, "network-io-total", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "outgoing-byte-rate", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "outgoing-byte-total", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "reauthentication-latency-avg", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "reauthentication-latency-max", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "request-rate", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "request-size-avg", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "request-size-max", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "request-total", tags, "The latest lag of the partition", "connections");
+            registerGaugeForObject(registry, o, "outgoing-byte-rate", tags, "outgoing bytes rate", "connections");
+            registerFunctionCounterForObject(registry, o, "outgoing-byte-total", tags, "outgoing bytes total", "connections");
+            registerTimeGaugeForObject(registry, o, "reauthentication-latency-avg", tags, "The max latency observed due to re-authentication average");
+            registerTimeGaugeForObject(registry, o, "reauthentication-latency-max", tags, "The max latency observed due to re-authentication max");
+            registerGaugeForObject(registry, o, "request-rate", tags, "The latest lag of the partition", "requests");
+            registerTimeGaugeForObject(registry, o, "request-size-avg", tags, "The latest lag of the partition");
+            registerTimeGaugeForObject(registry, o, "request-size-max", tags, "The latest lag of the partition");
+            registerFunctionCounterForObject(registry, o, "request-total", tags, "The latest lag of the partition", "requests");
             registerGaugeForObject(registry, o, "response-rate", tags, "The latest lag of the partition", "connections");
             registerFunctionCounterForObject(registry, o, "response-total", tags, "The latest lag of the partition", "connections");
             registerGaugeForObject(registry, o, "select-rate", tags, "The latest lag of the partition", "connections");
             registerFunctionCounterForObject(registry, o, "select-total", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "successful-authentication-no-reauth-total", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "successful-authentication-rate", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "successful-authentication-total", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "successful-reauthentication-rate", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "successful-reauthentication-total", tags, "The latest lag of the partition", "connections");
+            registerFunctionCounterForObject(registry, o, "successful-authentication-no-reauth-total", tags,
+                    "The total number of connections with successful authentication where the client does not support re-authentication", "authentication");
+            registerGaugeForObject(registry, o, "successful-authentication-rate", tags, "connections with successful authentication rate", "authentication");
+            registerFunctionCounterForObject(registry, o, "successful-authentication-total", tags, "connections with successful authentication total", "authentication");
+            registerGaugeForObject(registry, o, "successful-reauthentication-rate", tags, "successful re-authentication of connections rate", "authentication");
+            registerFunctionCounterForObject(registry, o, "successful-reauthentication-total", tags, "successful re-authentication of connections total", "authentication");
         });
 
-        registerMetricsEventually("connect-node-metrics", (o, tags) -> {
-            // metrics reported per consumer, topic and partition
-            registerGaugeForObject(registry, o, "incoming-byte-rate", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "incoming-byte-total", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "outgoing-byte-rate", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "outgoing-byte-total", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "request-latency-avg", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "request-latency-max", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "request-rate", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "request-size-avg", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "request-size-max", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "request-total", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "response-rate", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "response-total", tags, "The latest lag of the partition", "connections");
+//        //the admin client metrics
+//        registerMetricsEventually("connect-node-metrics", (o, tags) -> {
+//            // metrics reported per consumer, topic and partition
+//            registerGaugeForObject(registry, o, "incoming-byte-rate", tags, "The latest lag of the partition", "connections");
+//            registerFunctionCounterForObject(registry, o, "incoming-byte-total", tags, "The latest lag of the partition", "connections");
+//            registerGaugeForObject(registry, o, "outgoing-byte-rate", tags, "The latest lag of the partition", "connections");
+//            registerFunctionCounterForObject(registry, o, "outgoing-byte-total", tags, "The latest lag of the partition", "connections");
+//            registerGaugeForObject(registry, o, "request-latency-avg", tags, "The latest lag of the partition", "connections");
+//            registerGaugeForObject(registry, o, "request-latency-max", tags, "The latest lag of the partition", "connections");
+//            registerGaugeForObject(registry, o, "request-rate", tags, "The latest lag of the partition", "connections");
+//            registerGaugeForObject(registry, o, "request-size-avg", tags, "The latest lag of the partition", "connections");
+//            registerGaugeForObject(registry, o, "request-size-max", tags, "The latest lag of the partition", "connections");
+//            registerFunctionCounterForObject(registry, o, "request-total", tags, "The latest lag of the partition", "connections");
+//            registerGaugeForObject(registry, o, "response-rate", tags, "The latest lag of the partition", "connections");
+//            registerFunctionCounterForObject(registry, o, "response-total", tags, "The latest lag of the partition", "connections");
+//
+//        });
 
-        });
 
-        registerMetricsEventually("connector-metrics", (o, tags) -> {
-            // metrics reported per consumer, topic and partition
+        //values that will not work with micrometer
+//        registerMetricsEventually(ConnectMetricsRegistry.CONNECTOR_GROUP_NAME, (o, tags) -> {
+
+            // metrics reported per connector
 //            registerGaugeForObject(registry, o, "connector-class", tags, "The latest lag of the partition", "connections");
-//            registerGaugeForObject(registry, o, "connector-class", tags, "The latest lag of the partition", "connections");
-        });
+//            registerGaugeForObject(registry, o, "connector-type", tags, "The type of the connector. One of 'source' or 'sink'.", "connections");
+//            registerGaugeForObject(registry, o, "connector-version", tags, "The version of the connector class, as reported by the connector.", "connections");
+//            registerGaugeForObject(registry, o, "status", tags, "The status of the connector. One of 'unassigned', 'running', 'paused', 'failed', or 'destroyed'.", "status");
+//        });
 
-        registerMetricsEventually("connector-task-metrics", (o, tags) -> {
-            // metrics reported per consumer, topic and partition
-            registerGaugeForObject(registry, o, "batch-size-avg", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "batch-size-max", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "offset-commit-avg-time-ms", tags, "The latest lag of the partition", "connections");
+        registerMetricsEventually(ConnectMetricsRegistry.TASK_GROUP_NAME, (o, tags) -> {
+
+            // metrics reported per connector, task
+            registerTimeGaugeForObject(registry, o, "batch-size-avg", tags, "The latest lag of the partition");
+            registerTimeGaugeForObject(registry, o, "batch-size-max", tags, "The latest lag of the partition");
+            registerTimeGaugeForObject(registry, o, "offset-commit-avg-time-ms", tags, "The latest lag of the partition");
             registerGaugeForObject(registry, o, "offset-commit-failure-percentage", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "offset-commit-max-time-ms", tags, "The latest lag of the partition", "connections");
+            registerTimeGaugeForObject(registry, o, "offset-commit-max-time-ms", tags, "The latest lag of the partition");
             registerGaugeForObject(registry, o, "offset-commit-success-percentage", tags, "The latest lag of the partition", "connections");
             registerGaugeForObject(registry, o, "pause-ratio", tags, "The latest lag of the partition", "connections");
             registerGaugeForObject(registry, o, "running-ratio", tags, "The latest lag of the partition", "connections");
@@ -171,13 +184,13 @@ public class KafkaConnectMetricsBinder implements MeterBinder, AutoCloseable {
 
         });
 
-        registerMetricsEventually("source-task-metrics", (o, tags) -> {
-            // metrics reported per consumer, topic and partition
-            registerGaugeForObject(registry, o, "poll-batch-avg-time-ms", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "poll-batch-max-time-ms", tags, "The latest lag of the partition", "connections");
+        registerMetricsEventually(ConnectMetricsRegistry.SOURCE_TASK_GROUP_NAME, (o, tags) -> {
+            // metrics reported per connector, task
+            registerTimeGaugeForObject(registry, o, "poll-batch-avg-time-ms", tags, "The latest lag of the partition");
+            registerTimeGaugeForObject(registry, o, "poll-batch-max-time-ms", tags, "The latest lag of the partition");
             registerGaugeForObject(registry, o, "source-record-active-count", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "source-record-active-count-avg", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "source-record-active-count-max", tags, "The latest lag of the partition", "connections");
+            registerTimeGaugeForObject(registry, o, "source-record-active-count-avg", tags, "The latest lag of the partition");
+            registerTimeGaugeForObject(registry, o, "source-record-active-count-max", tags, "The latest lag of the partition");
             registerGaugeForObject(registry, o, "source-record-poll-rate", tags, "The latest lag of the partition", "connections");
             registerFunctionCounterForObject(registry, o, "source-record-poll-total", tags, "The latest lag of the partition", "connections");
             registerGaugeForObject(registry, o, "source-record-write-rate", tags, "The latest lag of the partition", "connections");
@@ -185,26 +198,26 @@ public class KafkaConnectMetricsBinder implements MeterBinder, AutoCloseable {
 
         });
 
-        registerMetricsEventually("task-error-metrics", (o, tags) -> {
-            // metrics reported per consumer, topic and partition
-            registerGaugeForObject(registry, o, "deadletterqueue-produce-failures", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "deadletterqueue-produce-requests", tags, "The latest lag of the partition", "connections");
+        registerMetricsEventually(ConnectMetricsRegistry.TASK_ERROR_HANDLING_GROUP_NAME, (o, tags) -> {
+            // metrics reported per connector, task
+            registerGaugeForObject(registry, o, "deadletterqueue-produce-failures", tags, "The latest lag of the partition", "records");
+            registerGaugeForObject(registry, o, "deadletterqueue-produce-requests", tags, "The latest lag of the partition", "records");
             registerGaugeForObject(registry, o, "last-error-timestamp", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "total-errors-logged", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "total-record-errors", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "total-record-failures", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "total-record-skipped", tags, "The latest lag of the partition", "connections");
-            registerFunctionCounterForObject(registry, o, "total-retries", tags, "The latest lag of the partition", "connections");
+            registerFunctionCounterForObject(registry, o, "total-errors-logged", tags, "The latest lag of the partition", "errors");
+            registerFunctionCounterForObject(registry, o, "total-record-errors", tags, "The latest lag of the partition", "records");
+            registerFunctionCounterForObject(registry, o, "total-record-failures", tags, "The latest lag of the partition", "records");
+            registerFunctionCounterForObject(registry, o, "total-record-skipped", tags, "The latest lag of the partition", "records");
+            registerFunctionCounterForObject(registry, o, "total-retries", tags, "The latest lag of the partition", "retries");
 
         });
 
 
-        registerMetricsEventually("connect-worker-metrics", (o, tags) -> {
-            // metrics reported per consumer, topic and partition
+        registerMetricsEventually(ConnectMetricsRegistry.WORKER_GROUP_NAME, (o, tags) -> {
+
             registerGaugeForObject(registry, o, "connector-count", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "connector-startup-attempts-total", tags, "The latest lag of the partition", "connections");
+            registerFunctionCounterForObject(registry, o, "connector-startup-attempts-total", tags, "The latest lag of the partition", "connections");
             registerGaugeForObject(registry, o, "connector-startup-failure-percentage", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "connector-startup-failure-total", tags, "The latest lag of the partition", "connections");
+            registerFunctionCounterForObject(registry, o, "connector-startup-failure-total", tags, "The latest lag of the partition", "connections");
             registerGaugeForObject(registry, o, "connector-startup-success-percentage", tags, "The latest lag of the partition", "connections");
             registerGaugeForObject(registry, o, "connector-startup-success-total", tags, "The latest lag of the partition", "connections");
             registerGaugeForObject(registry, o, "task-count", tags, "The latest lag of the partition", "connections");
@@ -215,17 +228,17 @@ public class KafkaConnectMetricsBinder implements MeterBinder, AutoCloseable {
             registerFunctionCounterForObject(registry, o, "task-startup-success-total", tags, "The latest lag of the partition", "connections");
         });
 
-        registerMetricsEventually("connect-worker-rebalance-metrics", (o, tags) -> {
-            // metrics reported per consumer, topic and partition
+        registerMetricsEventually(ConnectMetricsRegistry.WORKER_REBALANCE_GROUP_NAME, (o, tags) -> {
+
             registerFunctionCounterForObject(registry, o, "completed-rebalances-total", tags, "The latest lag of the partition", "connections");
             registerGaugeForObject(registry, o, "epoch", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "rebalance-avg-time-ms", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "rebalance-max-time-ms", tags, "The latest lag of the partition", "connections");
+            registerTimeGaugeForObject(registry, o, "rebalance-avg-time-ms", tags, "The latest lag of the partition");
+            registerTimeGaugeForObject(registry, o, "rebalance-max-time-ms", tags, "The latest lag of the partition");
             registerGaugeForObject(registry, o, "rebalancing", tags, "The latest lag of the partition", "connections");
-            registerGaugeForObject(registry, o, "time-since-last-rebalance-ms", tags, "The latest lag of the partition", "connections");
+            registerTimeGaugeForObject(registry, o, "time-since-last-rebalance-ms", tags, "The latest lag of the partition");
 
         });
-        
+
     }
 
 
@@ -296,6 +309,16 @@ public class KafkaConnectMetricsBinder implements MeterBinder, AutoCloseable {
             tags = Tags.concat(tags, "partition", partition);
         }
 
+        String connector = name.getKeyProperty("connector");
+        if (connector != null) {
+            tags = Tags.concat(tags, "connector", connector);
+        }
+
+        String task = name.getKeyProperty("task");
+        if (task != null) {
+            tags = Tags.concat(tags, "task", task);
+        }
+
         return tags;
     }
 
@@ -326,6 +349,10 @@ public class KafkaConnectMetricsBinder implements MeterBinder, AutoCloseable {
         }
     }
 
+    private void registerGaugeForObject(MeterRegistry registry, ObjectName o, String jmxMetricName, Tags allTags, String description, String baseUnit) {
+        registerGaugeForObject(registry, o, jmxMetricName, sanitize(jmxMetricName), allTags, description, baseUnit);
+    }
+
     private void registerGaugeForObject(MeterRegistry registry, ObjectName o, String jmxMetricName, String meterName, Tags allTags, String description, String baseUnit) {
         final AtomicReference<Gauge> gauge = new AtomicReference<>();
         gauge.set(Gauge
@@ -335,10 +362,6 @@ public class KafkaConnectMetricsBinder implements MeterBinder, AutoCloseable {
                 .baseUnit(baseUnit)
                 .tags(allTags)
                 .register(registry));
-    }
-
-    private void registerGaugeForObject(MeterRegistry registry, ObjectName o, String jmxMetricName, Tags allTags, String description, String baseUnit) {
-        registerGaugeForObject(registry, o, jmxMetricName, sanitize(jmxMetricName), allTags, description, baseUnit);
     }
 
     private void registerFunctionCounterForObject(MeterRegistry registry, ObjectName o, String jmxMetricName, Tags allTags, String description, String baseUnit) {
@@ -352,6 +375,15 @@ public class KafkaConnectMetricsBinder implements MeterBinder, AutoCloseable {
                 .register(registry));
     }
 
+    private void registerTimeGaugeForObject(MeterRegistry registry, ObjectName o, String jmxMetricName, Tags allTags, String description) {
+        registerTimeGaugeForObject(registry, o, jmxMetricName, sanitize(jmxMetricName), allTags, description);
+    }
+
+    private void registerTimeGaugeForObject(MeterRegistry registry, ObjectName o, String jmxMetricName,
+                                            String meterName, Tags allTags, String description) {
+        registerTimeGaugeForObject(registry, o, jmxMetricName, meterName, allTags, description, TimeUnit.MILLISECONDS);
+    }
+
     private void registerTimeGaugeForObject(MeterRegistry registry, ObjectName o, String jmxMetricName,
                                             String meterName, Tags allTags, String description, TimeUnit timeUnit) {
         final AtomicReference<TimeGauge> timeGauge = new AtomicReference<>();
@@ -360,14 +392,5 @@ public class KafkaConnectMetricsBinder implements MeterBinder, AutoCloseable {
                 .description(description)
                 .tags(allTags)
                 .register(registry));
-    }
-
-    private void registerTimeGaugeForObject(MeterRegistry registry, ObjectName o, String jmxMetricName,
-                                            String meterName, Tags allTags, String description) {
-        registerTimeGaugeForObject(registry, o, jmxMetricName, meterName, allTags, description, TimeUnit.MILLISECONDS);
-    }
-
-    private void registerTimeGaugeForObject(MeterRegistry registry, ObjectName o, String jmxMetricName, Tags allTags, String description) {
-        registerTimeGaugeForObject(registry, o, jmxMetricName, sanitize(jmxMetricName), allTags, description);
     }
 }

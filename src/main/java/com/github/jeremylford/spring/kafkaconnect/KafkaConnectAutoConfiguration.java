@@ -10,12 +10,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-@Import({
-        KafkaConnectConfiguration.class,
-        RESTConfiguration.class
-})
 @Configuration
 @AutoConfigureBefore(JerseyAutoConfiguration.class)
+@Import({
+        KafkaConnectConfiguration.class,
+        JerseyConfiguration.class,
+        MetricsConfiguration.class
+})
 public class KafkaConnectAutoConfiguration {
 
     @Bean
