@@ -19,14 +19,23 @@
 package com.github.jeremylford.spring.kafkaconnect;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Atomics;
+import org.apache.kafka.connect.health.ConnectClusterState;
+import org.apache.kafka.connect.health.ConnectorHealth;
+import org.apache.kafka.connect.health.ConnectorState;
+import org.apache.kafka.connect.health.TaskState;
+import org.apache.kafka.connect.runtime.AbstractStatus;
 import org.apache.kafka.connect.runtime.Herder;
+import org.apache.kafka.connect.runtime.rest.entities.ConnectorStateInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,45 +46,67 @@ public class KafkaConnectHealthIndicator extends AbstractHealthIndicator {
 
     private final KafkaConnectHealthIndicatorProperties healthIndicatorProperties;
     private final Herder herder;
+    private final ConnectClusterState connectClusterState;
 
-    public KafkaConnectHealthIndicator(KafkaConnectHealthIndicatorProperties healthIndicatorProperties, Herder herder) {
+    public KafkaConnectHealthIndicator(KafkaConnectHealthIndicatorProperties healthIndicatorProperties, Herder herder, ConnectClusterState connectClusterState) {
         this.healthIndicatorProperties = healthIndicatorProperties;
         this.herder = herder;
+        this.connectClusterState = connectClusterState;
     }
 
     @Override
     protected void doHealthCheck(Health.Builder builder) {
 
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+//        CountDownLatch countDownLatch = new CountDownLatch(1);
 
-        AtomicReference<Throwable> errorReference = Atomics.newReference();
-        AtomicReference<Collection<String>> connectorNames = Atomics.newReference();
-        herder.connectors((error, result) -> {
-            try {
-                errorReference.set(error);
-                connectorNames.set(result);
-            } finally {
-                countDownLatch.countDown();
-            }
-        });
+        Collection<String> connectorNames = herder.connectors(); //avoid timeout exception
+        Map<String, Map<String, String>> connectorState = new HashMap<>(); //TODO: send back map
 
-        try {
-            boolean countdownComplete = countDownLatch.await(healthIndicatorProperties.getTimeout(), TimeUnit.MILLISECONDS);
-            if (!countdownComplete) {
-                LOGGER.info("Failed to retrieve health data in allotted time");
+//        connectClusterState.`
+
+
+        builder.up();
+
+        for (String connectorName : connectorNames) {
+//            ConnectorStateInfo stateInfo = herder.connectorStatus(connectorName);
+//            AbstractStatus.State status = AbstractStatus.State.valueOf(stateInfo.connector().state());
+
+            ConnectorHealth connectorHealth = connectClusterState.connectorHealth(connectorName);
+            AbstractStatus.State status = AbstractStatus.State.valueOf(connectorHealth.connectorState().state());
+            if (status == AbstractStatus.State.FAILED) {
+                builder.down();
+            } else if(status != AbstractStatus.State.RUNNING) {
+                builder.unknown();
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+
+            connectorState.put(connectorName, ImmutableMap.of(
+                    "tasks", connectorHealth.tasksState().toString(),
+                    "state", connectorHealth.connectorState().toString()
+            ));
         }
 
-        if (errorReference.get() != null) {
-            builder.down(errorReference.get());
-        } else {
-            Collection<String> value = connectorNames.get();
-            if (value == null) {
-                value = ImmutableList.of();
-            }
-            builder.up().withDetail("connectors", value);
-        }
+        builder.withDetail("connectorState", connectorState);
+
+//        AtomicReference<Throwable> errorReference = Atomics.newReference();
+//
+//
+//        try {
+//            boolean countdownComplete = countDownLatch.await(healthIndicatorProperties.getTimeout(), TimeUnit.MILLISECONDS);
+//            if (!countdownComplete) {
+//                LOGGER.info("Failed to retrieve health data in allotted time");
+//            }
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt();
+//        }
+//
+//        if (errorReference.get() != null) {
+//            builder.down(errorReference.get());
+//        } else {
+//            Collection<String> value = connectorNames.get();
+//            if (value == null) {
+//                value = ImmutableList.of();
+//            }
+//            builder.up().withDetail("connectors", value);
+//        }
     }
 }

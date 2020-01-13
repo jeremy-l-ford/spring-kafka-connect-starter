@@ -15,7 +15,8 @@ import org.springframework.context.annotation.Import;
 @Import({
         KafkaConnectConfiguration.class,
         JerseyConfiguration.class,
-        MetricsConfiguration.class
+        MetricsConfiguration.class,
+//        KafkaConnectHealthIndicatorAutoConfiguration.class
 })
 public class KafkaConnectAutoConfiguration {
 

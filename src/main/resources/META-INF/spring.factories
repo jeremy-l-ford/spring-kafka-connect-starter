@@ -1,2 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.github.jeremylford.spring.kafkaconnect.KafkaConnectAutoConfiguration
+  com.github.jeremylford.spring.kafkaconnect.KafkaConnectAutoConfiguration,\
+  com.github.jeremylford.spring.kafkaconnect.KafkaConnectHealthIndicatorAutoConfiguration

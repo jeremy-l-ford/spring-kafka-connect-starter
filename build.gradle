@@ -64,6 +64,8 @@ configurations.all {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-jersey:${springBootVersion}")
 	implementation("org.springframework.boot:spring-boot-actuator:${springBootVersion}")
+//	compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: ${springBootVersion}
+
 	implementation("org.springframework.boot:spring-boot-actuator-autoconfigure:${springBootVersion}")
 //	implementation('org.springframework.kafka:spring-kafka')
 //	implementation('org.springframework.cloud:spring-cloud-starter-config:2.0.1.RELEASE')
@@ -77,13 +79,13 @@ dependencies {
 //	implementation group: "io.confluent", name: "rest-utils", version: "${confluentVersion}"
 	runtimeOnly group: "org.eclipse.jetty", name: "jetty-util", version: "9.4.19.v20190610"
 
-
 	optional("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}")
 	testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
 //	testImplementation group: 'org.apache.kafka', name: 'kafka_2.12', version: "${kafkaVersion}"
 //	testImplementation("org.springframework.kafka:spring-kafka-test:${springBootVersion}")
 	testImplementation("junit:junit:4.12")
 
+//	testRuntimeOnly group: 'org.springframework', name: 'spring-webmvc', version: ${springBootVersion}
 }
 
 task sourcesJar(type: Jar) {

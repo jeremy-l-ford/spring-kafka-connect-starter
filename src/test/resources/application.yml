@@ -83,6 +83,9 @@ spring:
 #  endpoints:
 #    web:
 management:
+  health:
+    kafkaconnect:
+      enabled: true
   endpoints:
     web:
       exposure:
@@ -90,4 +93,5 @@ management:
   endpoint:
     health:
       enabled: true
+      show-details: always
 #      base-path: /actuator
