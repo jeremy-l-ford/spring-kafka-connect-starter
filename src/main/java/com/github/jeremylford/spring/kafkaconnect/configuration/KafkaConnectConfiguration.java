@@ -35,11 +35,12 @@ import org.apache.kafka.connect.runtime.standalone.StandaloneConfig;
 import org.apache.kafka.connect.runtime.standalone.StandaloneHerder;
 import org.apache.kafka.connect.storage.ConfigBackingStore;
 import org.apache.kafka.connect.storage.Converter;
+import org.apache.kafka.connect.storage.FileOffsetBackingStore;
 import org.apache.kafka.connect.storage.KafkaConfigBackingStore;
 import org.apache.kafka.connect.storage.KafkaOffsetBackingStore;
 import org.apache.kafka.connect.storage.KafkaStatusBackingStore;
+import org.apache.kafka.connect.storage.OffsetBackingStore;
 import org.apache.kafka.connect.storage.StatusBackingStore;
-import org.apache.kafka.connect.util.ConnectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,9 +54,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * Spring configuration that sets up Kafka Connect.
@@ -81,12 +83,12 @@ public class KafkaConnectConfiguration {
 
     @Bean
     public WorkerConfig workerConfig(KafkaConnectProperties kafkaConnectProperties) {
-        Map<String, String> distributedProperties = kafkaConnectProperties.getDistributed().buildProperties();
-        boolean distributedMode = !distributedProperties.isEmpty();
-        boolean standaloneMode = !kafkaConnectProperties.getStandalone().buildProperties().isEmpty();
-        if (distributedMode) {
+        DistributedProperties distributed = kafkaConnectProperties.getDistributed();
+        KafkaConnectProperties.StandaloneProperties standalone = kafkaConnectProperties.getStandalone();
+
+        if (distributed.isEnabled()) {
             return new DistributedConfig(kafkaConnectProperties.buildProperties());
-        } else if (standaloneMode) {
+        } else if (standalone.isEnabled()) {
             return new StandaloneConfig(kafkaConnectProperties.buildProperties());
         } else {
             return null;
@@ -110,14 +112,19 @@ public class KafkaConnectConfiguration {
         System.out.println("Previous Classloader " + classLoader);
 
 
-        String kafkaClusterId = ConnectUtils.lookupKafkaClusterId(config);
+        String kafkaClusterId = "myClusterId"; //ConnectUtils.lookupKafkaClusterId(config);
         LOGGER.debug("Kafka cluster ID: {}", kafkaClusterId);
 
         URI advertisedUrl = getAdvertisedUrl(config, jerseyProperties, serverProperties);
         String workerId = advertisedUrl.getHost() + ":" + advertisedUrl.getPort();
 
         LOGGER.info("Initializing offset backing store");
-        KafkaOffsetBackingStore offsetBackingStore = new KafkaOffsetBackingStore();
+        OffsetBackingStore offsetBackingStore;
+        if (config instanceof DistributedConfig) {
+            offsetBackingStore = new KafkaOffsetBackingStore();
+        } else {
+            offsetBackingStore = new FileOffsetBackingStore();
+        }
         offsetBackingStore.configure(config);
 
         ConnectorClientConfigOverridePolicy connectorClientConfigOverridePolicy = plugins.newPlugin(
@@ -127,20 +134,20 @@ public class KafkaConnectConfiguration {
         Worker worker = new Worker(workerId, time, plugins, config, offsetBackingStore, connectorClientConfigOverridePolicy);
         WorkerConfigTransformer configTransformer = worker.configTransformer();
 
-        LOGGER.info("Initializing status backing store");
-        Converter internalValueConverter = worker.getInternalValueConverter();
-        StatusBackingStore statusBackingStore = new KafkaStatusBackingStore(time, internalValueConverter);
-        statusBackingStore.configure(config);
-
-        LOGGER.info("Initializing config backing store");
-        ConfigBackingStore configBackingStore = new KafkaConfigBackingStore(
-                internalValueConverter,
-                config,
-                configTransformer);
 
         LOGGER.info("Initializing herder");
         Herder herder;
         if (config instanceof DistributedConfig) {
+            LOGGER.info("Initializing status backing store");
+            Converter internalValueConverter = worker.getInternalValueConverter();
+            StatusBackingStore statusBackingStore = new KafkaStatusBackingStore(time, internalValueConverter);
+            statusBackingStore.configure(config);
+
+            LOGGER.info("Initializing config backing store");
+            ConfigBackingStore configBackingStore = new KafkaConfigBackingStore(
+                    internalValueConverter,
+                    config,
+                    configTransformer);
 
             DistributedConfig distributedConfig = new DistributedConfig(config.originalsStrings());
 
@@ -187,6 +194,9 @@ public class KafkaConnectConfiguration {
         Integer advertisedPort = config.getInt(WorkerConfig.REST_ADVERTISED_PORT_CONFIG);
         if (advertisedPort == null) {
             advertisedPort = serverProperties.getPort();
+            if (advertisedPort == null) {
+                advertisedPort = 8080; //standard default of springboot
+            }
         }
         return advertisedPort;
     }
@@ -194,7 +204,16 @@ public class KafkaConnectConfiguration {
     private static String determineAdvertisedHostName(WorkerConfig config, ServerProperties serverProperties) {
         String advertisedHostName = config.getString(WorkerConfig.REST_ADVERTISED_HOST_NAME_CONFIG);
         if (advertisedHostName == null) {
-            advertisedHostName = serverProperties.getAddress().getHostName();
+            InetAddress address = serverProperties.getAddress();
+            if (address != null) {
+                advertisedHostName = address.getHostName();
+            } else {
+                try {
+                    advertisedHostName = InetAddress.getLocalHost().getHostAddress();
+                } catch (UnknownHostException e) {
+                    advertisedHostName = "localhost";
+                }
+            }
         }
         return advertisedHostName;
     }

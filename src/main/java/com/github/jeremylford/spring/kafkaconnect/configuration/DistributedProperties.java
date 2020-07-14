@@ -45,6 +45,8 @@ import static com.github.jeremylford.spring.kafkaconnect.configuration.PropertyS
  */
 public class DistributedProperties {
 
+    private boolean enabled;
+
     /**
      * A unique string that identifies the Connect cluster group this worker belongs to.
      */
@@ -300,6 +302,14 @@ public class DistributedProperties {
 
     public void setSasl(Sasl sasl) {
         this.sasl = sasl;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public Map<String, String> buildProperties() {

@@ -1,7 +1,7 @@
 buildscript {
 	ext {
 		springBootVersion = '2.0.0.RELEASE'
-		kafkaVersion = '2.3.0'
+		kafkaVersion = '2.4.0'
 	}
 	repositories {
 		mavenCentral()
@@ -75,8 +75,7 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
 //	testImplementation("org.springframework.kafka:spring-kafka-test:${springBootVersion}")
 	testImplementation("junit:junit:4.12")
-	
-	
+
 }
 
 task sourcesJar(type: Jar) {
