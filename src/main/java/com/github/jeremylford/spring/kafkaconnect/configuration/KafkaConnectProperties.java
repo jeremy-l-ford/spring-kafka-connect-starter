@@ -20,6 +20,7 @@ package com.github.jeremylford.spring.kafkaconnect.configuration;
 
 import org.apache.kafka.connect.runtime.WorkerConfig;
 import org.apache.kafka.connect.runtime.distributed.DistributedConfig;
+import org.apache.kafka.connect.runtime.standalone.StandaloneConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -34,7 +35,6 @@ import static com.github.jeremylford.spring.kafkaconnect.configuration.PropertyS
 import static com.github.jeremylford.spring.kafkaconnect.configuration.PropertySupport.putLong;
 import static com.github.jeremylford.spring.kafkaconnect.configuration.PropertySupport.putString;
 
-@Component
 @ConfigurationProperties("spring.kafka.connect")
 public class KafkaConnectProperties {
 
@@ -426,8 +426,11 @@ public class KafkaConnectProperties {
         putString(properties, WorkerConfig.METRICS_RECORDING_LEVEL_CONFIG, metricsRecordingLevel);
         putString(properties, WorkerConfig.METRIC_REPORTER_CLASSES_CONFIG, metricsReporterClasses);
 
-        properties.putAll(distributed.buildProperties());
-        properties.putAll(standalone.buildProperties());
+        if(distributed.isEnabled()) {
+            properties.putAll(distributed.buildProperties());
+        } else if(standalone.isEnabled()) {
+            properties.putAll(standalone.buildProperties());
+        }
 
         return properties;
     }
@@ -463,4 +466,37 @@ public class KafkaConnectProperties {
     }
 
 
+    public static class StandaloneProperties {
+
+        private boolean enabled;
+
+        /**
+         * File to store offset data in.
+         */
+        private String offsetStorageFileName;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getOffsetStorageFileName() {
+            return offsetStorageFileName;
+        }
+
+        public void setOffsetStorageFileName(String offsetStorageFileName) {
+            this.offsetStorageFileName = offsetStorageFileName;
+        }
+
+        public Map<String, String> buildProperties() {
+
+            Map<String, String> properties = new HashMap<>();
+            putString(properties, StandaloneConfig.OFFSET_STORAGE_FILE_FILENAME_CONFIG, offsetStorageFileName);
+            return properties;
+        }
+
+    }
 }

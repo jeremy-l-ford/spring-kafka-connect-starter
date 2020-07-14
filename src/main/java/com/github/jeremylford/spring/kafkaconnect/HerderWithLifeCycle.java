@@ -23,6 +23,7 @@ import org.apache.kafka.connect.runtime.Herder;
 import org.apache.kafka.connect.runtime.HerderRequest;
 import org.apache.kafka.connect.runtime.distributed.DistributedHerder;
 import org.apache.kafka.connect.runtime.isolation.Plugins;
+import org.apache.kafka.connect.runtime.rest.InternalRequestSignature;
 import org.apache.kafka.connect.runtime.rest.entities.ConfigInfos;
 import org.apache.kafka.connect.runtime.rest.entities.ConnectorInfo;
 import org.apache.kafka.connect.runtime.rest.entities.ConnectorStateInfo;
@@ -104,8 +105,8 @@ public class HerderWithLifeCycle implements Herder {
     }
 
     @Override
-    public void putTaskConfigs(String connName, List<Map<String, String>> configs, Callback<Void> callback) {
-        delegate.putTaskConfigs(connName, configs, callback);
+    public void putTaskConfigs(String connName, List<Map<String, String>> configs, Callback<Void> callback, InternalRequestSignature requestSignature) {
+        delegate.putTaskConfigs(connName, configs, callback, requestSignature);
     }
 
     @Override

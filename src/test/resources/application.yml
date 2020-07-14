@@ -17,9 +17,9 @@ spring:
       offset-commit-interval-ms: 60000
       offset-commit-timeout-ms: 5000
       listeners: HTTP://localhost:8080
-      rest-advertised-host-name: localhost
-      rest-advertised-port: 8080
-      rest-advertised-listener: http
+#      rest-advertised-host-name: localhost
+#      rest-advertised-port: 8080
+#      rest-advertised-listener: http
       access-control-allow-origin: "*"
       access-control-allow-methods: GET
       plugins-path: /Users/jford/projects/kafka
@@ -58,7 +58,12 @@ spring:
                 static.field: myfield
                 static.value: myvalue
 
+      standalone:
+        enabled: false
+        offsetStorageFileName: /Users/jford/offset.connect
+
       distributed:
+        enabled: true
         group-id: ${spring.application.name}
         session-timeout-ms: 30000
         heartbeat-interval-ms: 10000

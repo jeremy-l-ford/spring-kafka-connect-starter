@@ -60,7 +60,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * -> Kafka Connect Thread
  * if success, return Spring Event Thread
  */
-@Component
 public class ContextRefreshedListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContextRefreshedListener.class);
 
