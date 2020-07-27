@@ -23,13 +23,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("management.kafka.connect")
 public class KafkaConnectHealthIndicatorProperties {
 
-    private int timeout = 3000;
+//    private int timeout = 3000;
 
-    public int getTimeout() {
-        return timeout;
-    }
+//    public int getTimeout() {
+//        return timeout;
+//    }
 
-    public void setTimeout(int timeout) {
-        this.timeout = timeout;
-    }
+//    public void setTimeout(int timeout) {
+//        this.timeout = timeout;
+//    }
 }

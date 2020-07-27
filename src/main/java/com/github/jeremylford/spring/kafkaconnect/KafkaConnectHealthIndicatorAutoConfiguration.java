@@ -25,13 +25,6 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(KafkaConnectHealthIndicatorProperties.class)
 public class KafkaConnectHealthIndicatorAutoConfiguration {
 
-    private final KafkaConnectHealthIndicatorProperties kafkaConnectHealthIndicatorProperties;
-
-    @Autowired
-    public KafkaConnectHealthIndicatorAutoConfiguration(KafkaConnectHealthIndicatorProperties kafkaConnectHealthIndicatorProperties) {
-        this.kafkaConnectHealthIndicatorProperties = kafkaConnectHealthIndicatorProperties;
-    }
-
     @Bean
     public ConnectClusterState connectClusterState(Herder herder) {
         long herderRequestTimeoutMs = ConnectorsResource.REQUEST_TIMEOUT_MS;
@@ -45,6 +38,6 @@ public class KafkaConnectHealthIndicatorAutoConfiguration {
 
     @Bean
     public HealthIndicator kafkaConnectHealthIndicator(Herder herder, ConnectClusterState connectClusterState) {
-        return new KafkaConnectHealthIndicator(kafkaConnectHealthIndicatorProperties, herder, connectClusterState);
+        return new KafkaConnectHealthIndicator(herder, connectClusterState);
     }
 }
