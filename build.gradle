@@ -1,7 +1,7 @@
 buildscript {
 	ext {
 		springBootVersion = '2.0.0.RELEASE'
-		kafkaVersion = '2.4.0'
+		kafkaVersion = '2.6.0'
 	}
 	repositories {
 		mavenCentral()
@@ -35,7 +35,7 @@ version = '0.0.1-SNAPSHOT'
 defaultTasks("clean", "build")
 
 compileJava {
-	sourceCompatibility = 1.8  // can be switched to 11 for testing
+	sourceCompatibility = 1.8
 	targetCompatibility = 1.8
 	options.encoding = "UTF-8"
 }
@@ -67,6 +67,7 @@ dependencies {
 	implementation group: 'org.apache.kafka', name: 'connect-api', version: "${kafkaVersion}"
 	implementation group: 'org.apache.kafka', name: 'connect-runtime', version: "${kafkaVersion}"
 	implementation group: 'org.apache.kafka', name: 'kafka-clients', version: "${kafkaVersion}"
+	compile group: 'com.google.guava', name: 'guava', version: '30.0-jre'
 	compile group: 'io.micrometer', name: 'micrometer-core', version: '1.2.1'
 
 
