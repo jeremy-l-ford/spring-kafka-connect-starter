@@ -22,6 +22,8 @@ import com.google.common.collect.Maps;
 import org.apache.kafka.connect.runtime.ConnectorConfig;
 import org.apache.kafka.connect.runtime.Herder;
 import org.apache.kafka.connect.runtime.SinkConnectorConfig;
+import org.apache.kafka.connect.runtime.SourceConnectorConfig;
+import org.apache.kafka.connect.runtime.TopicCreationConfig;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
 
 import java.util.ArrayList;
@@ -88,7 +90,14 @@ public class ConnectorProperties {
      */
     private List<String> transforms = new ArrayList<>();
 
-    private List<TransformDefinitionProperties> transformDefinitions = new ArrayList<>();
+    /**
+     * Aliases for the predicates used by transformations.
+     */
+    private List<String> predicates = new ArrayList<>();
+
+    private List<TransformDefinition> transformDefinitions = new ArrayList<>();
+
+    private List<PredicateDefinition> predicateDefinitions = new ArrayList<>();
 
     /**
      * The action that Connect should take on the connector when changes in external
@@ -133,7 +142,9 @@ public class ConnectorProperties {
      */
     private boolean errorsLogIncludeMessages = ConnectorConfig.ERRORS_LOG_INCLUDE_MESSAGES_DEFAULT;
 
-    private SinkProperties sink = new SinkProperties();
+    private Sink sink = new Sink();
+
+    private Source source = new Source();
 
     private Map<String, String> properties = Maps.newHashMap();
 
@@ -193,12 +204,28 @@ public class ConnectorProperties {
         this.transforms = transforms;
     }
 
-    public List<TransformDefinitionProperties> getTransformDefinitions() {
+    public List<String> getPredicates() {
+        return predicates;
+    }
+
+    public void setPredicates(List<String> predicates) {
+        this.predicates = predicates;
+    }
+
+    public List<TransformDefinition> getTransformDefinitions() {
         return transformDefinitions;
     }
 
-    public void setTransformDefinitions(List<TransformDefinitionProperties> transformDefinitions) {
+    public void setTransformDefinitions(List<TransformDefinition> transformDefinitions) {
         this.transformDefinitions = transformDefinitions;
+    }
+
+    public List<PredicateDefinition> getPredicateDefinitions() {
+        return predicateDefinitions;
+    }
+
+    public void setPredicateDefinitions(List<PredicateDefinition> predicateDefinitions) {
+        this.predicateDefinitions = predicateDefinitions;
     }
 
     public Herder.ConfigReloadAction getConfigurationReloadAction() {
@@ -249,12 +276,20 @@ public class ConnectorProperties {
         this.errorsLogIncludeMessages = errorsLogIncludeMessages;
     }
 
-    public SinkProperties getSink() {
+    public Sink getSink() {
         return sink;
     }
 
-    public void setSink(SinkProperties sink) {
+    public void setSink(Sink sink) {
         this.sink = sink;
+    }
+
+    public Source getSource() {
+        return source;
+    }
+
+    public void setSource(Source source) {
+        this.source = source;
     }
 
     public Map<String, String> getProperties() {
@@ -265,9 +300,11 @@ public class ConnectorProperties {
         this.properties = properties;
     }
 
-    public static class TransformDefinitionProperties {
+    public static class TransformDefinition {
         private String name;
         private String transformClass;
+        private String predicate;
+        private boolean negate;
         private Map<String, String> properties = new HashMap<>();
 
         public String getName() {
@@ -286,6 +323,22 @@ public class ConnectorProperties {
             this.transformClass = transformClass;
         }
 
+        public String getPredicate() {
+            return predicate;
+        }
+
+        public void setPredicate(String predicate) {
+            this.predicate = predicate;
+        }
+
+        public boolean isNegate() {
+            return negate;
+        }
+
+        public void setNegate(boolean negate) {
+            this.negate = negate;
+        }
+
         public Map<String, String> getProperties() {
             return properties;
         }
@@ -297,11 +350,15 @@ public class ConnectorProperties {
         public Map<String, String> buildProperties() {
             Map<String, String> properties = new HashMap<>();
 
-            String prefix = ConnectorConfig.TRANSFORMS_CONFIG + "." + name;
-            properties.put(prefix + ".type", transformClass);
+            String prefix = ConnectorConfig.TRANSFORMS_CONFIG + "." + name + ".";
+            putString(properties, prefix + "type", transformClass);
+            putString(properties, prefix + "predicate", predicate);
+            if (predicate != null) {
+                putBoolean(properties, prefix + "negate", negate);
+            }
 
             for (Map.Entry<String, String> entry : this.properties.entrySet()) {
-                properties.put(prefix + "." + entry.getKey(), entry.getValue());
+                properties.put(prefix + entry.getKey(), entry.getValue());
             }
 
             return properties;
@@ -327,18 +384,228 @@ public class ConnectorProperties {
         putLong(properties, ConnectorConfig.ERRORS_RETRY_TIMEOUT_CONFIG, errorsRetryTimeoutMs);
         putList(properties, ConnectorConfig.TRANSFORMS_CONFIG, transforms);
 
-        for (TransformDefinitionProperties transformDefinition : transformDefinitions) {
+        for (TransformDefinition transformDefinition : transformDefinitions) {
             properties.putAll(transformDefinition.buildProperties());
         }
 
+        putList(properties, ConnectorConfig.PREDICATES_CONFIG, predicates);
+        for (PredicateDefinition predicateDefinition : predicateDefinitions) {
+            properties.putAll(predicateDefinition.buildProperties());
+        }
+
         properties.putAll(sink.buildProperties());
+        properties.putAll(source.buildProperties());
 
         properties.putAll(this.properties);
 
         return properties;
     }
 
-    public static class SinkProperties {
+    public static class PredicateDefinition {
+        private String name;
+        private String predicateClass;
+        private Map<String, String> properties = new HashMap<>();
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getPredicateClass() {
+            return predicateClass;
+        }
+
+        public void setPredicateClass(String predicateClass) {
+            this.predicateClass = predicateClass;
+        }
+
+        public Map<String, String> getProperties() {
+            return properties;
+        }
+
+        public void setProperties(Map<String, String> properties) {
+            this.properties = properties;
+        }
+
+        public Map<String, String> buildProperties() {
+            Map<String, String> properties = new HashMap<>();
+
+            String prefix = ConnectorConfig.PREDICATES_PREFIX + name + ".";
+            properties.put(prefix + "type", predicateClass);
+
+            for (Map.Entry<String, String> entry : this.properties.entrySet()) {
+                properties.put(prefix + entry.getKey(), entry.getValue());
+            }
+
+            return properties;
+        }
+    }
+
+    public static class Source {
+
+        private String defaultTopic;
+
+        /**
+         * Groups of configurations for topics created by source connectors.
+         */
+        private TopicCreation topicCreation = new TopicCreation();
+
+        public String getDefaultTopic() {
+            return defaultTopic;
+        }
+
+        public void setDefaultTopic(String defaultTopic) {
+            this.defaultTopic = defaultTopic;
+        }
+
+        public TopicCreation getTopicCreation() {
+            return topicCreation;
+        }
+
+        public void setTopicCreation(TopicCreation topicCreation) {
+            this.topicCreation = topicCreation;
+        }
+
+        public Map<String, String> buildProperties() {
+            Map<String, String> properties = new HashMap<>();
+
+            properties.putAll(topicCreation.buildProperties());
+
+            return properties;
+        }
+    }
+
+    public static class TopicCreation {
+
+        private Creation defaults = new Creation();
+
+        private Map<String, Creation> groups = new HashMap<>();
+
+        public Creation getDefaults() {
+            return defaults;
+        }
+
+        public void setDefaults(Creation defaults) {
+            this.defaults = defaults;
+        }
+
+        public Map<String, Creation> getGroups() {
+            return groups;
+        }
+
+        public void setGroups(Map<String, Creation> groups) {
+            this.groups = groups;
+        }
+
+        public Map<String, String> buildProperties() {
+            Map<String, String> properties = new HashMap<>();
+
+            putInteger(properties, TopicCreationConfig.DEFAULT_TOPIC_CREATION_PREFIX + TopicCreationConfig.REPLICATION_FACTOR_CONFIG, defaults.replicationFactor);
+            putInteger(properties, TopicCreationConfig.DEFAULT_TOPIC_CREATION_PREFIX + TopicCreationConfig.PARTITIONS_CONFIG, defaults.partitions);
+
+            for (Map.Entry<String, Creation> entry : groups.entrySet()) {
+                String groupPrefix = SourceConnectorConfig.TOPIC_CREATION_PREFIX + entry.getKey() + ".";
+                Creation creation = entry.getValue();
+                putInteger(properties, groupPrefix + TopicCreationConfig.REPLICATION_FACTOR_CONFIG, creation.replicationFactor);
+                putInteger(properties, groupPrefix + TopicCreationConfig.PARTITIONS_CONFIG, creation.partitions);
+                putList(properties, groupPrefix + TopicCreationConfig.INCLUDE_REGEX_CONFIG, creation.includeRegex);
+                putList(properties, groupPrefix + TopicCreationConfig.EXCLUDE_REGEX_CONFIG, creation.excludeRegex);
+            }
+
+            return properties;
+        }
+    }
+
+    public static class Creation {
+
+
+        /**
+         * The number of partitions new topics created for
+         * this connector. This value may be -1 to use the broker's default number of partitions,
+         * or a positive number representing the desired number of partitions.
+         * For the default group this configuration is required. For any
+         * other group defined in topic.creation.groups this config is optional and if it's
+         * missing it gets the value of the default group
+         */
+        private int partitions;
+
+        /**
+         * The replication factor for new topics
+         * created for this connector using this group. This value may be -1 to use the broker's"
+         * default replication factor, or may be a positive number not larger than the number of
+         * brokers in the Kafka cluster. A value larger than the number of brokers in the Kafka cluster
+         * will result in an error when the new topic is created. For the default group this configuration
+         * is required. For any other group defined in topic.creation.groups this config is
+         * optional and if it's missing it gets the value of the default group
+         */
+        private int replicationFactor;
+
+        /**
+         * A list of regular expression literals
+         * used to match the topic names used by the source connector. This list is used
+         * to include topics that should be created using the topic settings defined by this group.
+         * <p>
+         * Not valid for default settings.
+         */
+        private List<String> includeRegex = new ArrayList<>();
+
+        /**
+         * A list of regular expression literals
+         * used to match the topic names used by the source connector. This list is used
+         * to exclude topics from being created with the topic settings defined by this group.
+         * Note that exclusion rules have precedent and override any inclusion rules for the topics.
+         * <p>
+         * Not valid for default settings.
+         */
+        private List<String> excludeRegex = new ArrayList<>();
+
+        public int getPartitions() {
+            return partitions;
+        }
+
+        public void setPartitions(int partitions) {
+            this.partitions = partitions;
+        }
+
+        public int getReplicationFactor() {
+            return replicationFactor;
+        }
+
+        public void setReplicationFactor(int replicationFactor) {
+            this.replicationFactor = replicationFactor;
+        }
+
+        public List<String> getIncludeRegex() {
+            return includeRegex;
+        }
+
+        public void setIncludeRegex(List<String> includeRegex) {
+            this.includeRegex = includeRegex;
+        }
+
+        public List<String> getExcludeRegex() {
+            return excludeRegex;
+        }
+
+        public void setExcludeRegex(List<String> excludeRegex) {
+            this.excludeRegex = excludeRegex;
+        }
+
+        public Map<String, String> buildProperties() {
+            Map<String, String> properties = new HashMap<>();
+
+//            putString(properties, SourceConnectorConfig.TOPIC_CREATION_PREFIX + SourceConnectorConfig.)
+//            putList(properties, SourceConnectorConfig.TOPIC_CREATION_GROUPS_CONFIG, groups);
+
+            return properties;
+        }
+    }
+
+
+    public static class Sink {
 
         /**
          * List of topics to consume, separated by commas.

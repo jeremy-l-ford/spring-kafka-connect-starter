@@ -30,6 +30,8 @@ spring:
       metrics-recording-level: INFO
 #      metrics-reporter-classes: poiuewr
 
+      topicCreation:
+        enabled: false
       connectors:
         - name: connector1
           connector-class: org.apache.kafka.connect.tools.MockSourceConnector
@@ -40,15 +42,23 @@ spring:
           transforms:
             - t1
             - t2
+          predicates:
+            - p1
           configuration-reload-action: NONE
           errors-retry-timeout-ms: 5000
           errors_retry-max-delay-ms: 50000
           errors-tolerance: none
           errors-log-enable: true
           errors-log-include-messages: true
+          source:
+            topic-creation:
+              defaults:
+                replication-factor: 1
+                partitions: 2
           transform-definitions:
             - name: t1
               transform-class: org.apache.kafka.connect.transforms.InsertField$Value
+              predicate: p1
               properties:
                 static.field: myfield
                 static.value: myvalue
@@ -57,6 +67,11 @@ spring:
               properties:
                 static.field: myfield
                 static.value: myvalue
+          predicate-definitions:
+            - name: p1
+              predicate-class: org.apache.kafka.connect.transforms.predicates.HasHeaderKey
+              properties:
+                name: testHeader
 
       standalone:
         enabled: false
