@@ -24,10 +24,12 @@ import org.apache.kafka.connect.runtime.HerderRequest;
 import org.apache.kafka.connect.runtime.distributed.DistributedHerder;
 import org.apache.kafka.connect.runtime.isolation.Plugins;
 import org.apache.kafka.connect.runtime.rest.InternalRequestSignature;
+import org.apache.kafka.connect.runtime.rest.entities.ActiveTopicsInfo;
 import org.apache.kafka.connect.runtime.rest.entities.ConfigInfos;
 import org.apache.kafka.connect.runtime.rest.entities.ConnectorInfo;
 import org.apache.kafka.connect.runtime.rest.entities.ConnectorStateInfo;
 import org.apache.kafka.connect.runtime.rest.entities.TaskInfo;
+import org.apache.kafka.connect.storage.StatusBackingStore;
 import org.apache.kafka.connect.util.Callback;
 import org.apache.kafka.connect.util.ConnectorTaskId;
 import org.springframework.util.ReflectionUtils;
@@ -120,11 +122,6 @@ public class HerderWithLifeCycle implements Herder {
     }
 
     @Override
-    public ConfigInfos validateConnectorConfig(Map<String, String> connectorConfig) {
-        return delegate.validateConnectorConfig(connectorConfig);
-    }
-
-    @Override
     public void restartTask(ConnectorTaskId id, Callback<Void> cb) {
         delegate.restartTask(id, cb);
     }
@@ -171,6 +168,36 @@ public class HerderWithLifeCycle implements Herder {
 
     public boolean isDistributed() {
         return delegate instanceof DistributedHerder;
+    }
+
+    @Override
+    public boolean isRunning() {
+        return delegate.isRunning();
+    }
+
+    @Override
+    public ActiveTopicsInfo connectorActiveTopics(String connName) {
+        return delegate.connectorActiveTopics(connName);
+    }
+
+    @Override
+    public void resetConnectorActiveTopics(String connName) {
+        delegate.resetConnectorActiveTopics(connName);
+    }
+
+    @Override
+    public StatusBackingStore statusBackingStore() {
+        return delegate.statusBackingStore();
+    }
+
+    @Override
+    public void validateConnectorConfig(Map<String, String> connectorConfig, Callback<ConfigInfos> callback) {
+        delegate.validateConnectorConfig(connectorConfig, callback);
+    }
+
+    @Override
+    public void validateConnectorConfig(Map<String, String> connectorConfig, Callback<ConfigInfos> callback, boolean doLog) {
+        delegate.validateConnectorConfig(connectorConfig, callback, doLog);
     }
 
     /**
