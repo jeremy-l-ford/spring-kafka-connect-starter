@@ -112,6 +112,7 @@ public class ContextRefreshedListener {
     private void internalOnEvent() {
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
+        //execute a connector call in order to handle the configuration on the Worker's thread
         herder.connectors((error, result) -> {
             try {
                 handleEvent(error, result);
@@ -120,6 +121,7 @@ public class ContextRefreshedListener {
             }
         });
 
+        LOGGER.info("Waiting for connection configuration to be refreshed");
         try {
             // TODO: consider timeout here
             countDownLatch.await();

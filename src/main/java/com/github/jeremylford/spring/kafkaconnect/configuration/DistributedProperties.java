@@ -151,6 +151,7 @@ public class DistributedProperties {
 
     private Sasl sasl = new Sasl();
 
+    private InterWorker interWorker = new InterWorker();
 
     public String getGroupId() {
         return groupId;
@@ -335,8 +336,44 @@ public class DistributedProperties {
 
         properties.putAll(ssl.buildProperties());
         properties.putAll(sasl.buildProperties());
+        properties.putAll(interWorker.buildProperties());
 
         return properties;
+    }
+
+    public static class InterWorker {
+        /**
+         * The algorithm to use for generating internal request keys
+         */
+        private String keyAlgorithm = DistributedConfig.INTER_WORKER_KEY_GENERATION_ALGORITHM_DEFAULT;
+
+        /**
+         * The TTL of generated session keys used for internal request validation (in milliseconds)
+         */
+        private int keyTtlMills = DistributedConfig.INTER_WORKER_KEY_TTL_MS_MS_DEFAULT;
+
+        /**
+         * The algorithm used to sign internal requests
+         */
+        private String signatureAlgorithm = DistributedConfig.INTER_WORKER_SIGNATURE_ALGORITHM_DEFAULT;
+
+        /**
+         *  A list of permitted algorithms for verifying internal requests.
+         */
+        private List<String> verificationAlgorithm = new ArrayList<String>() {{
+            add(DistributedConfig.INTER_WORKER_SIGNATURE_ALGORITHM_DEFAULT);
+        }};
+
+        public Map<String, String> buildProperties() {
+            Map<String, String> properties = new HashMap<>();
+
+            putString(properties, DistributedConfig.INTER_WORKER_KEY_GENERATION_ALGORITHM_CONFIG, keyAlgorithm);
+            putInteger(properties, DistributedConfig.INTER_WORKER_KEY_TTL_MS_CONFIG, keyTtlMills);
+            putString(properties, DistributedConfig.INTER_WORKER_SIGNATURE_ALGORITHM_CONFIG, signatureAlgorithm);
+            putList(properties, DistributedConfig.INTER_WORKER_VERIFICATION_ALGORITHMS_CONFIG, verificationAlgorithm);
+
+            return properties;
+        }
     }
 
     //also in spring-kafka

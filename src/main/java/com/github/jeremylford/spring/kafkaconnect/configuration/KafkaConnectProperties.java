@@ -22,7 +22,6 @@ import org.apache.kafka.connect.runtime.WorkerConfig;
 import org.apache.kafka.connect.runtime.distributed.DistributedConfig;
 import org.apache.kafka.connect.runtime.standalone.StandaloneConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.github.jeremylford.spring.kafkaconnect.configuration.PropertySupport.putBoolean;
 import static com.github.jeremylford.spring.kafkaconnect.configuration.PropertySupport.putInteger;
 import static com.github.jeremylford.spring.kafkaconnect.configuration.PropertySupport.putList;
 import static com.github.jeremylford.spring.kafkaconnect.configuration.PropertySupport.putLong;
@@ -48,7 +48,6 @@ public class KafkaConnectProperties {
      * dynamically), this list need not contain the full set of servers (you may want more.
      */
     private List<String> bootstrapServers = Collections.singletonList(DistributedConfig.BOOTSTRAP_SERVERS_DEFAULT);
-
 
     private String clientDnsLookupConfig;
 
@@ -94,6 +93,14 @@ public class KafkaConnectProperties {
      * data to be committed in a future attempt.
      */
     private long offsetCommitTimeoutMs = 5000L;
+
+    /**
+     * List of comma-separated URIs the Admin REST API will listen on.
+     * The supported protocols are HTTP and HTTPS.
+     * An empty or blank string will disable this feature.
+     * The default behavior is to use the regular listener (specified by the 'listeners' property).
+     */
+    private List<String> adminListeners = new ArrayList<>();
 
     /**
      * List of comma-separated URIs the REST API will listen on. The supported protocols are HTTP and HTTPS.
@@ -191,6 +198,10 @@ public class KafkaConnectProperties {
      */
     private String metricsReporterClasses;
 
+    private TopicCreation topicCreation = new TopicCreation();
+
+    private TopicTracking topicTracking = new TopicTracking();
+
     private List<ConnectorProperties> connectors = new ArrayList<>();
 
     private DistributedProperties distributed = new DistributedProperties();
@@ -259,6 +270,14 @@ public class KafkaConnectProperties {
 
     public void setOffsetCommitTimeoutMs(long offsetCommitTimeoutMs) {
         this.offsetCommitTimeoutMs = offsetCommitTimeoutMs;
+    }
+
+    public List<String> getAdminListeners() {
+        return adminListeners;
+    }
+
+    public void setAdminListeners(List<String> adminListeners) {
+        this.adminListeners = adminListeners;
     }
 
     public List<String> getListeners() {
@@ -373,6 +392,7 @@ public class KafkaConnectProperties {
         this.metricsReporterClasses = metricsReporterClasses;
     }
 
+
     public List<ConnectorProperties> getConnectors() {
         return connectors;
     }
@@ -395,6 +415,22 @@ public class KafkaConnectProperties {
 
     public void setStandalone(StandaloneProperties standalone) {
         this.standalone = standalone;
+    }
+
+    public TopicCreation getTopicCreation() {
+        return topicCreation;
+    }
+
+    public void setTopicCreation(TopicCreation topicCreation) {
+        this.topicCreation = topicCreation;
+    }
+
+    public TopicTracking getTopicTracking() {
+        return topicTracking;
+    }
+
+    public void setTopicTracking(TopicTracking topicTracking) {
+        this.topicTracking = topicTracking;
     }
 
     public Map<String, String> buildProperties() {
@@ -426,6 +462,9 @@ public class KafkaConnectProperties {
         putString(properties, WorkerConfig.METRICS_RECORDING_LEVEL_CONFIG, metricsRecordingLevel);
         putString(properties, WorkerConfig.METRIC_REPORTER_CLASSES_CONFIG, metricsReporterClasses);
 
+        properties.putAll(topicCreation.buildProperties());
+        properties.putAll(topicTracking.buildProperties());
+
         if(distributed.isEnabled()) {
             properties.putAll(distributed.buildProperties());
         } else if(standalone.isEnabled()) {
@@ -447,6 +486,7 @@ public class KafkaConnectProperties {
                 ", offsetCommitIntervalMs=" + offsetCommitIntervalMs +
                 ", offsetCommitTimeoutMs=" + offsetCommitTimeoutMs +
                 ", listeners='" + listeners + '\'' +
+                ", adminListeners='" + adminListeners + '\'' +
                 ", restAdvertisedHostName='" + restAdvertisedHostName + '\'' +
                 ", restAdvertisedPort=" + restAdvertisedPort +
                 ", restAdvertisedListener='" + restAdvertisedListener + '\'' +
@@ -465,6 +505,68 @@ public class KafkaConnectProperties {
                 '}';
     }
 
+    public static class TopicCreation {
+
+        /**
+         * Whether to allowautomatic creation of topics used by source connectors, when source connectors
+         * are configured with `topic.creation.` properties. Each task will use an
+         * admin client to create its topics and will not depend on the Kafka brokers
+         * to create topics automatically.
+         */
+        private boolean enabled = true;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public Map<String, String> buildProperties() {
+            Map<String, String> properties = new HashMap<>();
+            putBoolean(properties, WorkerConfig.TOPIC_CREATION_ENABLE_CONFIG, enabled);
+            return properties;
+        }
+    }
+
+    public static class TopicTracking {
+        /**
+         * Whether to allow automatic creation of topics used by source connectors, when source connectors
+         * are configured with `topic.creation.` properties. Each task will use an
+         * admin client to create its topics and will not depend on the Kafka brokers
+         * to create topics automatically.
+         */
+        private boolean enabled = true;
+
+        /**
+         * Enable tracking the set of active topics per connector during runtime.
+         */
+        private boolean allowReset = true;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public boolean isAllowReset() {
+            return allowReset;
+        }
+
+        public void setAllowReset(boolean allowReset) {
+            this.allowReset = allowReset;
+        }
+
+        public Map<String, String> buildProperties() {
+            Map<String, String> properties = new HashMap<>();
+            putBoolean(properties, WorkerConfig.TOPIC_TRACKING_ENABLE_CONFIG, enabled);
+            putBoolean(properties, WorkerConfig.TOPIC_TRACKING_ALLOW_RESET_CONFIG, allowReset);
+            return properties;
+        }
+    }
 
     public static class StandaloneProperties {
 
@@ -499,4 +601,6 @@ public class KafkaConnectProperties {
         }
 
     }
+
+
 }

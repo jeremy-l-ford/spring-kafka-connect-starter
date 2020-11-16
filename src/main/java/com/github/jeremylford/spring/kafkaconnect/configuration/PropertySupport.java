@@ -18,6 +18,7 @@
  */
 package com.github.jeremylford.spring.kafkaconnect.configuration;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -68,6 +69,14 @@ class PropertySupport {
     }
 
     static Map<String, String> putList(Map<String, String> properties, String key, List<String> values) {
+        if (values != null && !values.isEmpty()) {
+            properties.put(key, String.join(",", values));
+        }
+
+        return properties;
+    }
+
+    static Map<String, String> putCollection(Map<String, String> properties, String key, Collection<String> values) {
         if (values != null && !values.isEmpty()) {
             properties.put(key, String.join(",", values));
         }
