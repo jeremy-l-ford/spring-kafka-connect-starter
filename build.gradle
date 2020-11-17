@@ -1,6 +1,6 @@
 buildscript {
 	ext {
-		springBootVersion = '2.0.0.RELEASE'
+		springBootVersion = '2.3.0.RELEASE'
 		kafkaVersion = '2.6.0'
 	}
 	repositories {
@@ -45,11 +45,11 @@ repositories {
 //	mavenLocal()
 }
 
-//configurations.all {
-//	exclude group: "commongs-logging", module: "commongs-logging"
-//	exclude group: "log4j"
-//	exclude group: "org.slf4j", module: "slf4j-log4j12"
-//}
+configurations.all {
+	exclude group: "commongs-logging", module: "commongs-logging"
+	exclude group: "log4j"
+	exclude group: "org.slf4j", module: "slf4j-log4j12"
+}
 
 //processResources {
 //	expand(project.properties)

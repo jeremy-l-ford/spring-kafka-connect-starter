@@ -161,11 +161,6 @@ public class KafkaConnectConfiguration {
         return new HerderWithLifeCycle(herder);
     }
 
-    @Bean
-    public ContextRefreshedListener contextRefreshedListener(Herder herder, KafkaConnectProperties kafkaConnectProperties) {
-        return new ContextRefreshedListener(herder, kafkaConnectProperties);
-    }
-
     @VisibleForTesting
     static URI getAdvertisedUrl(WorkerConfig config,
                                 JerseyProperties jerseyProperties,

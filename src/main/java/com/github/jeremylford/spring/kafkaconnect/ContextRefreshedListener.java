@@ -128,6 +128,7 @@ public class ContextRefreshedListener {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+        LOGGER.info("Connection configuration refreshed");
     }
 
     /**

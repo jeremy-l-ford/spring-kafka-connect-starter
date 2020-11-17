@@ -358,16 +358,62 @@ public class DistributedProperties {
         private String signatureAlgorithm = DistributedConfig.INTER_WORKER_SIGNATURE_ALGORITHM_DEFAULT;
 
         /**
+         * The TTL of generated session keys used for internal request validation (in milliseconds).
+         */
+        private Integer keySize;
+
+        /**
          *  A list of permitted algorithms for verifying internal requests.
          */
         private List<String> verificationAlgorithm = new ArrayList<String>() {{
             add(DistributedConfig.INTER_WORKER_SIGNATURE_ALGORITHM_DEFAULT);
         }};
 
+        public String getKeyAlgorithm() {
+            return keyAlgorithm;
+        }
+
+        public void setKeyAlgorithm(String keyAlgorithm) {
+            this.keyAlgorithm = keyAlgorithm;
+        }
+
+        public int getKeyTtlMills() {
+            return keyTtlMills;
+        }
+
+        public void setKeyTtlMills(int keyTtlMills) {
+            this.keyTtlMills = keyTtlMills;
+        }
+
+        public String getSignatureAlgorithm() {
+            return signatureAlgorithm;
+        }
+
+        public void setSignatureAlgorithm(String signatureAlgorithm) {
+            this.signatureAlgorithm = signatureAlgorithm;
+        }
+
+        public Integer getKeySize() {
+            return keySize;
+        }
+
+        public void setKeySize(Integer keySize) {
+            this.keySize = keySize;
+        }
+
+        public List<String> getVerificationAlgorithm() {
+            return verificationAlgorithm;
+        }
+
+        public void setVerificationAlgorithm(List<String> verificationAlgorithm) {
+            this.verificationAlgorithm = verificationAlgorithm;
+        }
+
         public Map<String, String> buildProperties() {
             Map<String, String> properties = new HashMap<>();
 
             putString(properties, DistributedConfig.INTER_WORKER_KEY_GENERATION_ALGORITHM_CONFIG, keyAlgorithm);
+            putInteger(properties, DistributedConfig.INTER_WORKER_KEY_SIZE_CONFIG, keySize);
             putInteger(properties, DistributedConfig.INTER_WORKER_KEY_TTL_MS_CONFIG, keyTtlMills);
             putString(properties, DistributedConfig.INTER_WORKER_SIGNATURE_ALGORITHM_CONFIG, signatureAlgorithm);
             putList(properties, DistributedConfig.INTER_WORKER_VERIFICATION_ALGORITHMS_CONFIG, verificationAlgorithm);
