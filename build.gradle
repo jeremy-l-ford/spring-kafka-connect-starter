@@ -65,6 +65,7 @@ dependencies {
 
 	implementation group: 'org.apache.kafka', name: 'kafka_2.12', version: "${kafkaVersion}"
 	implementation group: 'org.apache.kafka', name: 'connect-api', version: "${kafkaVersion}"
+	implementation group: 'org.apache.kafka', name: 'connect-mirror', version: "${kafkaVersion}"
 	implementation group: 'org.apache.kafka', name: 'connect-runtime', version: "${kafkaVersion}"
 	implementation group: 'org.apache.kafka', name: 'kafka-clients', version: "${kafkaVersion}"
 	compile group: 'com.google.guava', name: 'guava', version: '30.0-jre'
@@ -76,6 +77,8 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
 //	testImplementation("org.springframework.kafka:spring-kafka-test:${springBootVersion}")
 	testImplementation("junit:junit:4.12")
+//	testRuntimeOnly group: 'org.apache.kafka', name: 'connect-api', version: "${kafkaVersion}"
+	testRuntimeOnly group: 'org.apache.kafka', name: 'kafka-clients', version: "${kafkaVersion}"
 
 }
 

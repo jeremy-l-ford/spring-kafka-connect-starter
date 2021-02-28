@@ -24,6 +24,7 @@ import org.apache.kafka.connect.runtime.Herder;
 import org.apache.kafka.connect.runtime.SinkConnectorConfig;
 import org.apache.kafka.connect.runtime.SourceConnectorConfig;
 import org.apache.kafka.connect.runtime.TopicCreationConfig;
+import org.apache.kafka.connect.runtime.WorkerConfig;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
 
 import java.util.ArrayList;
@@ -480,9 +481,19 @@ public class ConnectorProperties {
 
     public static class TopicCreation {
 
+        private boolean enabled = false;
+
         private Creation defaults = new Creation();
 
         private Map<String, Creation> groups = new HashMap<>();
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
 
         public Creation getDefaults() {
             return defaults;
@@ -503,6 +514,7 @@ public class ConnectorProperties {
         public Map<String, String> buildProperties() {
             Map<String, String> properties = new HashMap<>();
 
+            putBoolean(properties, WorkerConfig.TOPIC_CREATION_ENABLE_CONFIG, enabled);
             putInteger(properties, TopicCreationConfig.DEFAULT_TOPIC_CREATION_PREFIX + TopicCreationConfig.REPLICATION_FACTOR_CONFIG, defaults.replicationFactor);
             putInteger(properties, TopicCreationConfig.DEFAULT_TOPIC_CREATION_PREFIX + TopicCreationConfig.PARTITIONS_CONFIG, defaults.partitions);
 

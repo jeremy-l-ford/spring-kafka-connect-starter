@@ -23,6 +23,9 @@ import com.github.jeremylford.spring.kafkaconnect.HerderWithLifeCycle;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.connect.connector.policy.ConnectorClientConfigOverridePolicy;
+import org.apache.kafka.connect.mirror.MirrorMakerConfig;
+import org.apache.kafka.connect.mirror.MirrorMakerConfig2;
+import org.apache.kafka.connect.mirror.SourceAndTarget;
 import org.apache.kafka.connect.runtime.Herder;
 import org.apache.kafka.connect.runtime.Worker;
 import org.apache.kafka.connect.runtime.WorkerConfig;
@@ -64,7 +67,7 @@ import java.util.Locale;
  */
 @AutoConfigureBefore(JerseyAutoConfiguration.class)
 @Configuration
-@EnableConfigurationProperties({KafkaConnectProperties.class, JerseyProperties.class})
+@EnableConfigurationProperties({KafkaConnectMirrorMakerProperties.class, KafkaConnectProperties.class, JerseyProperties.class})
 public class KafkaConnectConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaConnectConfiguration.class);
@@ -79,20 +82,6 @@ public class KafkaConnectConfiguration {
     public KafkaConnectConfiguration(JerseyProperties jerseyProperties, ServerProperties serverProperties) {
         this.jerseyProperties = jerseyProperties;
         this.serverProperties = serverProperties;
-    }
-
-    @Bean
-    public WorkerConfig workerConfig(KafkaConnectProperties kafkaConnectProperties) {
-        DistributedProperties distributed = kafkaConnectProperties.getDistributed();
-        KafkaConnectProperties.StandaloneProperties standalone = kafkaConnectProperties.getStandalone();
-
-        if (distributed.isEnabled()) {
-            return new DistributedConfig(kafkaConnectProperties.buildProperties());
-        } else if (standalone.isEnabled()) {
-            return new StandaloneConfig(kafkaConnectProperties.buildProperties());
-        } else {
-            return null;
-        }
     }
 
     /**
