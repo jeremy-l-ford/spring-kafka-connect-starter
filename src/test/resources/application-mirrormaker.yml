@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: myapp
+  jersey:
+    application-path: connect-api
+
+  kafka:
+    connect:
+      autoconfigure: false
+      mirror:
+        enabled: true
+        configuration:
+          offset.storage.replication.factor: 1
+          config.storage.replication.factor: 1
+          status.storage.replication.factor: 1
+          heartbeats.topic.replication.factor: 1
+          checkpoints.topic.replication.factor: 1
+          offset-syncs.topic.replication.factor: 1
+        topics: test1, test2
+#        connector-properties:
+
+        source:
+          alias: s1
+          bootstrap-servers: localhost:9092
+        target:
+          alias: t1
+          bootstrap-servers: localhost:9093

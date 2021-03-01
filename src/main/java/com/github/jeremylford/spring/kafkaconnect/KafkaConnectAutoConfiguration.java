@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Import;
 public class KafkaConnectAutoConfiguration {
 
     @Bean
-    @ConditionalOnProperty(value = "kafka.connect.autoconfigure", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(value = "spring.kafka.connect.autoconfigure", havingValue = "true")
     public ContextRefreshedListener contextRefreshedListener(Herder herder, KafkaConnectProperties kafkaConnectProperties) {
         return new ContextRefreshedListener(herder, kafkaConnectProperties);
     }

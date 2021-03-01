@@ -53,6 +53,7 @@ public class ConnectorPropertiesTest {
         topicCreation.setGroups(
                 ImmutableMap.of("g1", g1)
         );
+        topicCreation.setEnabled(true);
 
         source.setTopicCreation(topicCreation);
 
