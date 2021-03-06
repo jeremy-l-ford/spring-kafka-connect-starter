@@ -77,9 +77,9 @@ public class MirrorMakerTestingMain {
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "mainDemo");
 
-        KafkaConsumer<String, String> kafkaConsumer = new KafkaConsumer<>(properties);
-        kafkaConsumer.subscribe(Arrays.asList("s1.test1", "s1.test2"));
-        try {
+
+        try(KafkaConsumer<String, String> kafkaConsumer = new KafkaConsumer<>(properties)) {
+            kafkaConsumer.subscribe(Arrays.asList("s1.test1", "s1.test2"));
             int tries = 3;
             while (tries-- > 0) {
                 ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofSeconds(1));
@@ -87,10 +87,7 @@ public class MirrorMakerTestingMain {
                     System.out.println(record.key() + " " + record.value() + " " + record.offset());
                 }
             }
-        } finally {
-            kafkaConsumer.close();
         }
-
     }
 
     private static void sendMessage() throws ExecutionException, InterruptedException {

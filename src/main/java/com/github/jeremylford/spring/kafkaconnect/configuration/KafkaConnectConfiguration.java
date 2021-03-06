@@ -18,14 +18,10 @@
  */
 package com.github.jeremylford.spring.kafkaconnect.configuration;
 
-import com.github.jeremylford.spring.kafkaconnect.ContextRefreshedListener;
 import com.github.jeremylford.spring.kafkaconnect.HerderWithLifeCycle;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.connect.connector.policy.ConnectorClientConfigOverridePolicy;
-import org.apache.kafka.connect.mirror.MirrorMakerConfig;
-import org.apache.kafka.connect.mirror.MirrorMakerConfig2;
-import org.apache.kafka.connect.mirror.SourceAndTarget;
 import org.apache.kafka.connect.runtime.Herder;
 import org.apache.kafka.connect.runtime.Worker;
 import org.apache.kafka.connect.runtime.WorkerConfig;
@@ -34,7 +30,6 @@ import org.apache.kafka.connect.runtime.WorkerInfo;
 import org.apache.kafka.connect.runtime.distributed.DistributedConfig;
 import org.apache.kafka.connect.runtime.distributed.DistributedHerder;
 import org.apache.kafka.connect.runtime.isolation.Plugins;
-import org.apache.kafka.connect.runtime.standalone.StandaloneConfig;
 import org.apache.kafka.connect.runtime.standalone.StandaloneHerder;
 import org.apache.kafka.connect.storage.ConfigBackingStore;
 import org.apache.kafka.connect.storage.Converter;
@@ -66,8 +61,8 @@ import java.util.Locale;
  * Spring configuration that sets up Kafka Connect.
  */
 @AutoConfigureBefore(JerseyAutoConfiguration.class)
-@Configuration
-@EnableConfigurationProperties({KafkaConnectMirrorMakerProperties.class, KafkaConnectProperties.class, JerseyProperties.class})
+@Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties({JerseyProperties.class})
 public class KafkaConnectConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaConnectConfiguration.class);

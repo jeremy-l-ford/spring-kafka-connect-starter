@@ -23,7 +23,11 @@ public class KafkaConnectMirrorMakerProperties {
 
     private Source source = new Source();
 
+    private List<Source> sources = new ArrayList<>();
+
     private Target target = new Target();
+
+    private List<Target> targets = new ArrayList<>();
 
     private Map<String, String> configuration = new HashMap<>();
 
@@ -57,6 +61,22 @@ public class KafkaConnectMirrorMakerProperties {
 
     public void setTarget(Target target) {
         this.target = target;
+    }
+
+    public List<Source> getSources() {
+        return sources;
+    }
+
+    public void setSources(List<Source> sources) {
+        this.sources = sources;
+    }
+
+    public List<Target> getTargets() {
+        return targets;
+    }
+
+    public void setTargets(List<Target> targets) {
+        this.targets = targets;
     }
 
     public Map<String, String> getConfiguration() {
