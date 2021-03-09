@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 
 import static com.github.jeremylford.spring.kafkaconnect.configuration.PropertySupport.putBoolean;
 import static com.github.jeremylford.spring.kafkaconnect.configuration.PropertySupport.putInteger;
@@ -43,6 +44,13 @@ import static com.github.jeremylford.spring.kafkaconnect.configuration.PropertyS
  * The properties defining a connector's configuration.
  */
 public class ConnectorProperties {
+
+    public ConnectorProperties() {
+    }
+
+    ConnectorProperties(Properties properties) {
+
+    }
 
     /**
      * Globally unique name to use for this connector.
