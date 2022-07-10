@@ -39,6 +39,8 @@ import org.apache.kafka.connect.storage.KafkaOffsetBackingStore;
 import org.apache.kafka.connect.storage.KafkaStatusBackingStore;
 import org.apache.kafka.connect.storage.OffsetBackingStore;
 import org.apache.kafka.connect.storage.StatusBackingStore;
+import org.apache.kafka.connect.util.ConnectUtils;
+import org.apache.kafka.connect.util.SharedTopicAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +57,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Spring configuration that sets up Kafka Connect.
@@ -96,16 +100,23 @@ public class KafkaConnectConfiguration {
         System.out.println("Previous Classloader " + classLoader);
 
 
-        String kafkaClusterId = "myClusterId"; //ConnectUtils.lookupKafkaClusterId(config);
+        String kafkaClusterId = ConnectUtils.lookupKafkaClusterId(config);
         LOGGER.debug("Kafka cluster ID: {}", kafkaClusterId);
 
         URI advertisedUrl = getAdvertisedUrl(config, jerseyProperties, serverProperties);
         String workerId = advertisedUrl.getHost() + ":" + advertisedUrl.getPort();
 
+        SharedTopicAdmin sharedAdmin = null;
+        if (config instanceof DistributedConfig) {
+            Map<String, Object> adminProps = new HashMap<>(config.originals());
+            ConnectUtils.addMetricsContextProperties(adminProps, config, kafkaClusterId);
+            sharedAdmin = new SharedTopicAdmin(adminProps);
+        }
+
         LOGGER.info("Initializing offset backing store");
         OffsetBackingStore offsetBackingStore;
         if (config instanceof DistributedConfig) {
-            offsetBackingStore = new KafkaOffsetBackingStore();
+            offsetBackingStore = new KafkaOffsetBackingStore(sharedAdmin);
         } else {
             offsetBackingStore = new FileOffsetBackingStore();
         }
@@ -118,26 +129,26 @@ public class KafkaConnectConfiguration {
         Worker worker = new Worker(workerId, time, plugins, config, offsetBackingStore, connectorClientConfigOverridePolicy);
         WorkerConfigTransformer configTransformer = worker.configTransformer();
 
-
         LOGGER.info("Initializing herder");
         Herder herder;
         if (config instanceof DistributedConfig) {
             LOGGER.info("Initializing status backing store");
             Converter internalValueConverter = worker.getInternalValueConverter();
-            StatusBackingStore statusBackingStore = new KafkaStatusBackingStore(time, internalValueConverter);
+            StatusBackingStore statusBackingStore = new KafkaStatusBackingStore(time, internalValueConverter, sharedAdmin);
             statusBackingStore.configure(config);
 
             LOGGER.info("Initializing config backing store");
             ConfigBackingStore configBackingStore = new KafkaConfigBackingStore(
                     internalValueConverter,
                     config,
-                    configTransformer);
+                    configTransformer,
+                    sharedAdmin);
 
             DistributedConfig distributedConfig = new DistributedConfig(config.originalsStrings());
 
             herder = new DistributedHerder(distributedConfig, time, worker,
                     kafkaClusterId, statusBackingStore, configBackingStore,
-                    advertisedUrl.toString(), connectorClientConfigOverridePolicy);
+                    advertisedUrl.toString(), connectorClientConfigOverridePolicy, sharedAdmin);
         } else {
             herder = new StandaloneHerder(worker, kafkaClusterId, connectorClientConfigOverridePolicy);
         }

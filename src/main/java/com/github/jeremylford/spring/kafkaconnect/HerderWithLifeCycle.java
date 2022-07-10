@@ -209,23 +209,10 @@ public class HerderWithLifeCycle implements Herder {
         return isLeader(delegate);
     }
 
-//    /**
-//     * This method is intended to be called from within the Herder's queue.
-//     *
-//     * @return the cluster configuration state
-//     */
-//    private ClusterConfigState getClusterConfigState() {
-//        return getClusterConfigState(delegate);
-//    }
-
-//    /**
-//     * This method is intended to be called from within the Herder's queue.
-//     *
-//     * @return the configuration for a connector
-//     */
-//    public Map<String, String> getConfigurationForConnector(String connectorName) {
-//        return getConnectorConfiguration(delegate, connectorName);
-//    }
+    @Override
+    public void tasksConfig(String connName, Callback<Map<ConnectorTaskId, Map<String, String>>> callback) {
+        delegate.tasksConfig(connName, callback);
+    }
 
     private boolean isLeader(Herder herder) {
         boolean result = true;
@@ -236,30 +223,6 @@ public class HerderWithLifeCycle implements Herder {
         }
         return result;
     }
-
-//    private ClusterConfigState getClusterConfigState(Herder herder) {
-//        ClusterConfigState result = null;
-//
-//        if (herder instanceof DistributedHerder) {
-//            if (configStateField != null) {
-//                result = (ClusterConfigState) ReflectionUtils.getField(configStateField, herder);
-//            }
-//        }
-//
-//        return result;
-//    }
-
-//    private Map<String, String> getConnectorConfiguration(Herder herder, String connectorName) {
-//        Map<String, String> result = Collections.emptyMap();
-//
-//        if (herder instanceof DistributedHerder) {
-//            if (configMethod != null) {
-//                result = (Map<String, String>) ReflectionUtils.invokeMethod(configMethod, herder, connectorName);
-//            }
-//        }
-//
-//        return result;
-//    }
 
     @VisibleForTesting
     Method findConfigMethod(Herder delegate) {

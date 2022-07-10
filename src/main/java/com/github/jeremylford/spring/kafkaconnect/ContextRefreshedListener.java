@@ -34,7 +34,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
@@ -75,14 +74,9 @@ public class ContextRefreshedListener {
     public ContextRefreshedListener(Herder herder, KafkaConnectProperties workerProperties) {
         this.herder = herder;
         this.workerProperties = workerProperties;
-        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
-                .setDaemon(true)
-                .setNameFormat("kafka-connect-context")
-                .build());
+        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("kafka-connect-context").build());
         executor.setMaximumPoolSize(1);  //only allow one object in the pool at a time
-        this.scheduledExecutorService = Executors.unconfigurableScheduledExecutorService(
-                executor
-        );
+        this.scheduledExecutorService = Executors.unconfigurableScheduledExecutorService(executor);
     }
 
     @EventListener({ApplicationReadyEvent.class, ContextRefreshedEvent.class})
@@ -104,7 +98,7 @@ public class ContextRefreshedListener {
             //should never be non-null, but JIC
             Future<?> existingFuture = this.eventFuture.getAndSet(null);
             if (existingFuture != null) {
-                existingFuture.cancel(true);
+                // nothing to do, this is the future for the current thread
             }
         }
     }
@@ -151,7 +145,6 @@ public class ContextRefreshedListener {
             for (ConnectorProperties connector : workerProperties.getConnectors()) {
                 connectorsToRemove.remove(connector.getName());
 
-                //TODO: should use callback version?
                 ConnectorInfo connectorInfo = herder.connectorInfo(connector.getName());
                 if (connectorInfo == null) {
                     connectorsToAdd.put(connector.getName(), connector.buildProperties());
@@ -205,9 +198,7 @@ public class ContextRefreshedListener {
     private void handleRebalance() {
         LOGGER.info("Rebalance in progress.  Trying again later...");
 
-        this.eventFuture.set(scheduledExecutorService.schedule(
-                ContextRefreshedListener.this::onScheduledEvent, rebalanceDelayInSeconds, TimeUnit.SECONDS)
-        );
+        this.eventFuture.set(scheduledExecutorService.schedule(ContextRefreshedListener.this::onScheduledEvent, rebalanceDelayInSeconds, TimeUnit.SECONDS));
     }
 
     private static boolean isLeader(Herder herder) {
@@ -217,9 +208,5 @@ public class ContextRefreshedListener {
         }
         return result;
     }
-
-//    private static ClusterConfigState getClusterConfigState(Herder herder) {
-//        return ((HerderWithLifeCycle) herder).getClusterConfigState();
-//    }
 
 }
