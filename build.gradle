@@ -1,7 +1,7 @@
 buildscript {
 	ext {
-		springBootVersion = '2.3.0.RELEASE'
-		kafkaVersion = '2.6.0'
+		springBootVersion = '2.7.11'
+		kafkaVersion = '3.1.0'
 	}
 	repositories {
 		mavenCentral()
@@ -9,7 +9,6 @@ buildscript {
 	}
 	dependencies {
 //		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-		classpath("io.spring.gradle:propdeps-plugin:0.0.10.RELEASE")
 	}
 }
 
@@ -23,8 +22,6 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 //apply plugin: 'org.springframework.boot'
 //apply plugin: 'io.spring.dependency-management'
-apply plugin: "propdeps"
-apply plugin: 'propdeps-idea'
 
 group = 'com.github.jeremylford'
 version = '0.0.1-SNAPSHOT'
@@ -35,8 +32,8 @@ version = '0.0.1-SNAPSHOT'
 defaultTasks("clean", "build")
 
 compileJava {
-	sourceCompatibility = 1.8
-	targetCompatibility = 1.8
+	sourceCompatibility = 11
+	targetCompatibility = 11
 	options.encoding = "UTF-8"
 }
 
@@ -66,17 +63,25 @@ dependencies {
 	implementation group: 'org.apache.kafka', name: 'kafka_2.12', version: "${kafkaVersion}"
 	implementation group: 'org.apache.kafka', name: 'connect-api', version: "${kafkaVersion}"
 	implementation group: 'org.apache.kafka', name: 'connect-mirror', version: "${kafkaVersion}"
+	implementation group: 'org.apache.kafka', name: 'connect-mirror-client', version: "${kafkaVersion}"
 	implementation group: 'org.apache.kafka', name: 'connect-runtime', version: "${kafkaVersion}"
 	implementation group: 'org.apache.kafka', name: 'kafka-clients', version: "${kafkaVersion}"
-	compile group: 'com.google.guava', name: 'guava', version: '30.0-jre'
-	compile group: 'io.micrometer', name: 'micrometer-core', version: '1.2.1'
+	implementation group: 'com.google.guava', name: 'guava', version: '30.0-jre'
+	implementation group: 'io.micrometer', name: 'micrometer-core', version: '1.2.1'
+	implementation("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.15.0")
+
+//	implementation 'org.apache.kafka:connect-mirror:3.4.0'
 
 
-
-	optional("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}")
+	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}")
 	testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
 //	testImplementation("org.springframework.kafka:spring-kafka-test:${springBootVersion}")
 	testImplementation("junit:junit:4.12")
+	testImplementation("org.mockito:mockito-core:5.3.1")
+	testImplementation("org.mockito:mockito-junit-jupiter:5.3.1")
+
+//	testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.3")
+
 //	testRuntimeOnly group: 'org.apache.kafka', name: 'connect-api', version: "${kafkaVersion}"
 	testRuntimeOnly group: 'org.apache.kafka', name: 'kafka-clients', version: "${kafkaVersion}"
 

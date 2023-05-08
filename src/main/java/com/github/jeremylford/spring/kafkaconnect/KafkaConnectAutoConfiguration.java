@@ -4,7 +4,7 @@ import com.github.jeremylford.spring.kafkaconnect.configuration.KafkaConnectConf
 import com.github.jeremylford.spring.kafkaconnect.configuration.KafkaConnectMirrorMakerProperties;
 import com.github.jeremylford.spring.kafkaconnect.configuration.KafkaConnectProperties;
 import com.github.jeremylford.spring.kafkaconnect.mirror.MirrorMakerConnectorManager;
-import org.apache.kafka.connect.mirror.MirrorMakerConfig2;
+import org.apache.kafka.connect.mirror.MirrorMakerConfig;
 import org.apache.kafka.connect.mirror.SourceAndTarget;
 import org.apache.kafka.connect.runtime.Herder;
 import org.apache.kafka.connect.runtime.WorkerConfig;
@@ -79,13 +79,13 @@ public class KafkaConnectAutoConfiguration {
         }
 
         @Bean
-        public MirrorMakerConfig2 mirrorMakerConfig2() {
-            return new MirrorMakerConfig2(kafkaConnectMirrorMakerProperties.properties());
+        public MirrorMakerConfig mirrorMakerConfig2() {
+            return new MirrorMakerConfig(kafkaConnectMirrorMakerProperties.properties());
         }
 
         @Bean
         public WorkerConfig mirrorMakerWorkConfig(
-                MirrorMakerConfig2 mirrorMakerConfig
+                MirrorMakerConfig mirrorMakerConfig
         ) {
             return new DistributedConfig(mirrorMakerConfig.workerConfig(new SourceAndTarget(
                     kafkaConnectMirrorMakerProperties.getSource().getAlias(),
@@ -95,7 +95,7 @@ public class KafkaConnectAutoConfiguration {
 
         @Bean
         public MirrorMakerConnectorManager mirrorMakerConnectorManager(
-                Herder herder, KafkaConnectMirrorMakerProperties kafkaConnectMirrorMakerProperties, MirrorMakerConfig2 mirrorMakerConfig2
+                Herder herder, KafkaConnectMirrorMakerProperties kafkaConnectMirrorMakerProperties, MirrorMakerConfig mirrorMakerConfig2
         ) {
             return new MirrorMakerConnectorManager(herder, kafkaConnectMirrorMakerProperties, mirrorMakerConfig2);
         }

@@ -3,7 +3,7 @@ package com.github.jeremylford.spring.kafkaconnect.mirror;
 import com.github.jeremylford.spring.kafkaconnect.configuration.KafkaConnectMirrorMakerProperties;
 import org.apache.kafka.connect.mirror.MirrorCheckpointConnector;
 import org.apache.kafka.connect.mirror.MirrorHeartbeatConnector;
-import org.apache.kafka.connect.mirror.MirrorMakerConfig2;
+import org.apache.kafka.connect.mirror.MirrorMakerConfig;
 import org.apache.kafka.connect.mirror.MirrorSourceConnector;
 import org.apache.kafka.connect.mirror.SourceAndTarget;
 import org.apache.kafka.connect.runtime.Herder;
@@ -30,19 +30,19 @@ public class MirrorMakerConnectorManager {
 
     private final Herder herder;
     private final KafkaConnectMirrorMakerProperties kafkaConnectMirrorMakerProperties;
-    private final MirrorMakerConfig2 mirrorMakerConfig2;
+    private final MirrorMakerConfig mirrorMakerConfig;
 
-    public MirrorMakerConnectorManager(Herder herder, KafkaConnectMirrorMakerProperties kafkaConnectMirrorMakerProperties, MirrorMakerConfig2 mirrorMakerConfig2) {
+    public MirrorMakerConnectorManager(Herder herder, KafkaConnectMirrorMakerProperties kafkaConnectMirrorMakerProperties, MirrorMakerConfig mirrorMakerConfig) {
         this.herder = herder;
         this.kafkaConnectMirrorMakerProperties = kafkaConnectMirrorMakerProperties;
-        this.mirrorMakerConfig2 = mirrorMakerConfig2;
+        this.mirrorMakerConfig = mirrorMakerConfig;
     }
 
     @PostConstruct
     public void initialize() {
         for (Class<?> connectorClass : CONNECTOR_CLASSES) {
             SourceAndTarget sourceAndTarget = new SourceAndTarget(kafkaConnectMirrorMakerProperties.getSource().getAlias(), kafkaConnectMirrorMakerProperties.getTarget().getAlias());
-            Map<String, String> baseConfig = mirrorMakerConfig2.connectorBaseConfig(
+            Map<String, String> baseConfig = mirrorMakerConfig.connectorBaseConfig(
                     sourceAndTarget,
                     connectorClass
             );

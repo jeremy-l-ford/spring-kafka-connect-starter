@@ -21,6 +21,7 @@ package com.github.jeremylford.spring.kafkaconnect;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.kafka.connect.runtime.Herder;
 import org.apache.kafka.connect.runtime.HerderRequest;
+import org.apache.kafka.connect.runtime.RestartRequest;
 import org.apache.kafka.connect.runtime.distributed.DistributedHerder;
 import org.apache.kafka.connect.runtime.isolation.Plugins;
 import org.apache.kafka.connect.runtime.rest.InternalRequestSignature;
@@ -48,14 +49,12 @@ public class HerderWithLifeCycle implements Herder {
     private final Method isLeaderMethod;
     private final Method configMethod;
     private final Field configStateField;
-    private final Method herderMetrics;
 
     public HerderWithLifeCycle(Herder delegate) {
         this.delegate = delegate;
         this.isLeaderMethod = findIsLeaderMethod(delegate);
         this.configStateField = findConfigStateField(delegate);
         this.configMethod = findConfigMethod(delegate);
-        this.herderMetrics = findHerderMetricsMethod(delegate);
     }
 
 
@@ -209,7 +208,17 @@ public class HerderWithLifeCycle implements Herder {
         return isLeader(delegate);
     }
 
-//    /**
+    @Override
+    public void tasksConfig(String connName, Callback<Map<ConnectorTaskId, Map<String, String>>> callback) {
+        delegate.tasksConfig(connName, callback);
+    }
+
+    @Override
+    public void restartConnectorAndTasks(RestartRequest request, Callback<ConnectorStateInfo> cb) {
+        delegate.restartConnectorAndTasks(request, cb);
+    }
+
+    //    /**
 //     * This method is intended to be called from within the Herder's queue.
 //     *
 //     * @return the cluster configuration state
@@ -288,17 +297,5 @@ public class HerderWithLifeCycle implements Herder {
         }
 
         return isLeaderMethod;
-    }
-
-    Method findHerderMetricsMethod(Herder delegate) {
-        if (delegate instanceof DistributedHerder) {
-            Method herderMetricsMethod = ReflectionUtils.findMethod(delegate.getClass(), "herderMetrics");
-            if (herderMetricsMethod != null) {
-                herderMetricsMethod.setAccessible(true);
-            }
-            return herderMetricsMethod;
-        } else {
-            return null;
-        }
     }
 }
