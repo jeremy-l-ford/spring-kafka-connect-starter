@@ -91,7 +91,7 @@ public class DistributedProperties {
      */
     private Long workerUnsyncBackoffMs = (long) DistributedConfig.WORKER_UNSYNC_BACKOFF_MS_DEFAULT;
     /**
-     * The name of the Kafka topic where connector offsets are stored.
+     * The name of the Kafka topic where source connector offsets are stored.
      */
     private String offsetStorageTopic;
 
@@ -137,7 +137,9 @@ public class DistributedProperties {
             ConnectProtocolCompatibility.fromProtocol(DistributedConfig.CONNECT_PROTOCOL_DEFAULT);
 
     /**
-     *
+     * The maximum delay that is scheduled in order to wait for the return of one or more departed workers before
+     * rebalancing and reassigning their connectors and tasks to the group. During this
+     * period the connectors and tasks of the departed workers remain unassigned
      */
     private Integer scheduledRebalanceMaxDelayMs = DistributedConfig.SCHEDULED_REBALANCE_MAX_DELAY_MS_DEFAULT;
 
@@ -343,7 +345,9 @@ public class DistributedProperties {
 
     public static class InterWorker {
         /**
-         * The algorithm to use for generating internal request keys
+         * The algorithm to use for generating internal request keys.
+         * The algorithm 'INTER_WORKER_KEY_GENERATION_ALGORITHM_DEFAULT' will be used as a default on JVMs that support it;
+         * on other JVMs, no default is used and a value for this property must be manually specified in the worker config.
          */
         private String keyAlgorithm = DistributedConfig.INTER_WORKER_KEY_GENERATION_ALGORITHM_DEFAULT;
 
@@ -354,6 +358,8 @@ public class DistributedProperties {
 
         /**
          * The algorithm used to sign internal requests
+         * The algorithm 'INTER_WORKER_SIGNATURE_ALGORITHM_CONFIG ' will be used as a default on JVMs that support it;
+         * on other JVMs, no default is used and a value for this property must be manually specified in the worker config.
          */
         private String signatureAlgorithm = DistributedConfig.INTER_WORKER_SIGNATURE_ALGORITHM_DEFAULT;
 
@@ -363,7 +369,10 @@ public class DistributedProperties {
         private Integer keySize;
 
         /**
-         *  A list of permitted algorithms for verifying internal requests.
+         * A list of permitted algorithms for verifying internal requests,
+         * which must include the algorithm used for the INTER_WORKER_SIGNATURE_ALGORITHM_CONFIG property.
+         * The algorithm(s) 'INTER_WORKER_VERIFICATION_ALGORITHMS_DEFAULT ' will be used as a default on JVMs that provide them;
+         * on other JVMs, no default is used and a value for this property must be manually specified in the worker config.
          */
         private List<String> verificationAlgorithm = new ArrayList<String>() {{
             add(DistributedConfig.INTER_WORKER_SIGNATURE_ALGORITHM_DEFAULT);

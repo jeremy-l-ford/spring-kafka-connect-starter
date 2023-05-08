@@ -9,10 +9,10 @@ spring:
     connect:
       bootstrap-servers:
         - localhost:9092
-      client-dns-lookup-config: default
+      client-dns-lookup: USE_ALL_DNS_IPS
       key-converter: org.apache.kafka.connect.json.JsonConverter
       value-converter: org.apache.kafka.connect.json.JsonConverter
-      header-converer: org.apache.kafka.connect.storage.SimpleHeaderConverter
+      header-converter: org.apache.kafka.connect.storage.SimpleHeaderConverter
       task-shutdown-graceful-timeout-ms: 5000
       offset-commit-interval-ms: 60000
       offset-commit-timeout-ms: 5000

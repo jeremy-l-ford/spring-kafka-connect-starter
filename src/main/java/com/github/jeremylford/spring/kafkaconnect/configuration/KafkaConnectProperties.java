@@ -18,6 +18,7 @@
  */
 package com.github.jeremylford.spring.kafkaconnect.configuration;
 
+import org.apache.kafka.clients.ClientDnsLookup;
 import org.apache.kafka.connect.runtime.WorkerConfig;
 import org.apache.kafka.connect.runtime.distributed.DistributedConfig;
 import org.apache.kafka.connect.runtime.standalone.StandaloneConfig;
@@ -49,7 +50,18 @@ public class KafkaConnectProperties {
      */
     private List<String> bootstrapServers = Collections.singletonList(DistributedConfig.BOOTSTRAP_SERVERS_DEFAULT);
 
-    private String clientDnsLookupConfig;
+    /**
+     * Controls how the client uses DNS lookups.
+     * If set to <code>use_all_dns_ips</code>, connect to each returned IP
+     * address in sequence until a successful connection is established.
+     * After a disconnection, the next IP is used. Once all IPs have been
+     * used once, the client resolves the IP(s) from the hostname again
+     * (both the JVM and the OS cache DNS name lookups, however).
+     * If set to <code>resolve_canonical_bootstrap_servers_only</code>,
+     * resolve each bootstrap address into a list of canonical names. After
+     * the bootstrap phase, this behaves the same as <code>use_all_dns_ips</code>.
+     */
+    private ClientDnsLookup clientDnsLookup;
 
     /**
      * Converter class used to convert between Kafka Connect format and the serialized form that is written to Kafka.
@@ -216,12 +228,12 @@ public class KafkaConnectProperties {
         this.bootstrapServers = bootstrapServers;
     }
 
-    public String getClientDnsLookupConfig() {
-        return clientDnsLookupConfig;
+    public ClientDnsLookup getClientDnsLookup() {
+        return clientDnsLookup;
     }
 
-    public void setClientDnsLookupConfig(String clientDnsLookupConfig) {
-        this.clientDnsLookupConfig = clientDnsLookupConfig;
+    public void setClientDnsLookup(ClientDnsLookup clientDnsLookup) {
+        this.clientDnsLookup = clientDnsLookup;
     }
 
     public String getKeyConverter() {
@@ -438,7 +450,7 @@ public class KafkaConnectProperties {
 
 
         putString(properties, WorkerConfig.BOOTSTRAP_SERVERS_CONFIG, String.join(",", bootstrapServers));
-        putString(properties, WorkerConfig.CLIENT_DNS_LOOKUP_CONFIG, clientDnsLookupConfig);
+        putString(properties, WorkerConfig.CLIENT_DNS_LOOKUP_CONFIG, clientDnsLookup.toString());
         putString(properties, WorkerConfig.KEY_CONVERTER_CLASS_CONFIG, keyConverter);
         putString(properties, WorkerConfig.VALUE_CONVERTER_CLASS_CONFIG, valueConverter);
         putString(properties, WorkerConfig.HEADER_CONVERTER_CLASS_CONFIG, headerConverter);
@@ -465,9 +477,9 @@ public class KafkaConnectProperties {
         properties.putAll(topicCreation.buildProperties());
         properties.putAll(topicTracking.buildProperties());
 
-        if(distributed.isEnabled()) {
+        if (distributed.isEnabled()) {
             properties.putAll(distributed.buildProperties());
-        } else if(standalone.isEnabled()) {
+        } else if (standalone.isEnabled()) {
             properties.putAll(standalone.buildProperties());
         }
 
@@ -478,7 +490,7 @@ public class KafkaConnectProperties {
     public String toString() {
         return "KafkaConnectProperties{" +
                 "bootstrapServers=" + bootstrapServers +
-                ", clientDnsLookupConfig='" + clientDnsLookupConfig + '\'' +
+                ", clientDnsLookupConfig='" + clientDnsLookup + '\'' +
                 ", keyConverter='" + keyConverter + '\'' +
                 ", valueConverter='" + valueConverter + '\'' +
                 ", headerConverter='" + headerConverter + '\'' +

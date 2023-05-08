@@ -145,9 +145,11 @@ public class ConnectorProperties {
     private boolean errorsLogEnable = ConnectorConfig.ERRORS_LOG_ENABLE_DEFAULT;
 
     /**
-     * Whether to the include in the log the Connect record that resulted in
-     * a failure. This is 'false' by default, which will prevent record keys, values, and headers from being written to log files,
-     * although some information such as topic and partition number will still be logged.
+     * Whether to include in the log the Connect record that resulted in a failure.
+     * For sink records, the topic, partition, offset, and timestamp will be logged.
+     * For source records, the key and value (and their schemas), all headers, and the timestamp, Kafka topic,
+     * Kafka partition, source partition, and source offset will be logged.
+     * This is 'false' by default, which will prevent record keys, values, and headers from being written to log files.
      */
     private boolean errorsLogIncludeMessages = ConnectorConfig.ERRORS_LOG_INCLUDE_MESSAGES_DEFAULT;
 

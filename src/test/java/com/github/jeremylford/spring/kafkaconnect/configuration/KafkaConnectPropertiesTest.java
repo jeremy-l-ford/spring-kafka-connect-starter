@@ -1,6 +1,7 @@
 package com.github.jeremylford.spring.kafkaconnect.configuration;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.kafka.clients.ClientDnsLookup;
 import org.apache.kafka.connect.runtime.WorkerConfig;
 import org.junit.Test;
 
@@ -19,7 +20,7 @@ public class KafkaConnectPropertiesTest {
         kafkaConnectProperties.setBootstrapServers(
                 ImmutableList.of("b1", "b2")
         );
-        kafkaConnectProperties.setClientDnsLookupConfig("clientDns");
+        kafkaConnectProperties.setClientDnsLookup(ClientDnsLookup.USE_ALL_DNS_IPS);
         kafkaConnectProperties.setConnectorClientPolicyClass("policyClass");
         kafkaConnectProperties.setConfigProviders(
                 ImmutableList.of("p1", "p2")
