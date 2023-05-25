@@ -446,33 +446,33 @@ public class KafkaConnectProperties {
     }
 
     public Map<String, String> buildProperties() {
-        Map<String, String> properties = new HashMap<>();
+        StringMap properties = new StringMap();
 
 
-        putString(properties, WorkerConfig.BOOTSTRAP_SERVERS_CONFIG, String.join(",", bootstrapServers));
-        putString(properties, WorkerConfig.CLIENT_DNS_LOOKUP_CONFIG, clientDnsLookup.toString());
-        putString(properties, WorkerConfig.KEY_CONVERTER_CLASS_CONFIG, keyConverter);
-        putString(properties, WorkerConfig.VALUE_CONVERTER_CLASS_CONFIG, valueConverter);
-        putString(properties, WorkerConfig.HEADER_CONVERTER_CLASS_CONFIG, headerConverter);
-        putLong(properties, WorkerConfig.TASK_SHUTDOWN_GRACEFUL_TIMEOUT_MS_CONFIG, taskShutdownGracefulTimeoutMs);
-        putLong(properties, WorkerConfig.OFFSET_COMMIT_INTERVAL_MS_CONFIG, offsetCommitIntervalMs);
-        putLong(properties, WorkerConfig.OFFSET_COMMIT_TIMEOUT_MS_CONFIG, offsetCommitTimeoutMs);
-        putList(properties, WorkerConfig.LISTENERS_CONFIG, listeners);
-        putString(properties, WorkerConfig.REST_ADVERTISED_HOST_NAME_CONFIG, restAdvertisedHostName);
-        putInteger(properties, WorkerConfig.REST_ADVERTISED_PORT_CONFIG, restAdvertisedPort);
-        putString(properties, WorkerConfig.REST_ADVERTISED_LISTENER_CONFIG, restAdvertisedListener);
+        properties.putString(WorkerConfig.BOOTSTRAP_SERVERS_CONFIG, String.join(",", bootstrapServers));
+        properties.putString(WorkerConfig.CLIENT_DNS_LOOKUP_CONFIG, clientDnsLookup.toString());
+        properties.putString(WorkerConfig.KEY_CONVERTER_CLASS_CONFIG, keyConverter);
+        properties.putString(WorkerConfig.VALUE_CONVERTER_CLASS_CONFIG, valueConverter);
+        properties.putString(WorkerConfig.HEADER_CONVERTER_CLASS_CONFIG, headerConverter);
+        properties.putLong(WorkerConfig.TASK_SHUTDOWN_GRACEFUL_TIMEOUT_MS_CONFIG, taskShutdownGracefulTimeoutMs);
+        properties.putLong(WorkerConfig.OFFSET_COMMIT_INTERVAL_MS_CONFIG, offsetCommitIntervalMs);
+        properties.putLong(WorkerConfig.OFFSET_COMMIT_TIMEOUT_MS_CONFIG, offsetCommitTimeoutMs);
+        properties.putList(WorkerConfig.LISTENERS_CONFIG, listeners);
+        properties.putString(WorkerConfig.REST_ADVERTISED_HOST_NAME_CONFIG, restAdvertisedHostName);
+        properties.putInteger(WorkerConfig.REST_ADVERTISED_PORT_CONFIG, restAdvertisedPort);
+        properties.putString(WorkerConfig.REST_ADVERTISED_LISTENER_CONFIG, restAdvertisedListener);
 
-        putString(properties, WorkerConfig.ACCESS_CONTROL_ALLOW_ORIGIN_CONFIG, accessControlAllowOrigin);
-        putString(properties, WorkerConfig.ACCESS_CONTROL_ALLOW_METHODS_CONFIG, accessControlAllowMethods);
-        putString(properties, WorkerConfig.PLUGIN_PATH_CONFIG, pluginsPath);
-        putList(properties, WorkerConfig.CONFIG_PROVIDERS_CONFIG, configProviders);
-        putString(properties, WorkerConfig.REST_EXTENSION_CLASSES_CONFIG, restExtensionClasses);
-        putString(properties, WorkerConfig.CONNECTOR_CLIENT_POLICY_CLASS_CONFIG, connectorClientPolicyClass);
+        properties.putString(WorkerConfig.ACCESS_CONTROL_ALLOW_ORIGIN_CONFIG, accessControlAllowOrigin);
+        properties.putString(WorkerConfig.ACCESS_CONTROL_ALLOW_METHODS_CONFIG, accessControlAllowMethods);
+        properties.putString(WorkerConfig.PLUGIN_PATH_CONFIG, pluginsPath);
+        properties.putList(WorkerConfig.CONFIG_PROVIDERS_CONFIG, configProviders);
+        properties.putString(WorkerConfig.REST_EXTENSION_CLASSES_CONFIG, restExtensionClasses);
+        properties.putString(WorkerConfig.CONNECTOR_CLIENT_POLICY_CLASS_CONFIG, connectorClientPolicyClass);
 
-        putLong(properties, WorkerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG, metricsSampleWindowMs);
-        putLong(properties, WorkerConfig.METRICS_NUM_SAMPLES_CONFIG, metricsNumSamples);
-        putString(properties, WorkerConfig.METRICS_RECORDING_LEVEL_CONFIG, metricsRecordingLevel);
-        putString(properties, WorkerConfig.METRIC_REPORTER_CLASSES_CONFIG, metricsReporterClasses);
+        properties.putLong(WorkerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG, metricsSampleWindowMs);
+        properties.putLong(WorkerConfig.METRICS_NUM_SAMPLES_CONFIG, metricsNumSamples);
+        properties.putString(WorkerConfig.METRICS_RECORDING_LEVEL_CONFIG, metricsRecordingLevel);
+        properties.putString(WorkerConfig.METRIC_REPORTER_CLASSES_CONFIG, metricsReporterClasses);
 
         properties.putAll(topicCreation.buildProperties());
         properties.putAll(topicTracking.buildProperties());
@@ -536,8 +536,8 @@ public class KafkaConnectProperties {
         }
 
         public Map<String, String> buildProperties() {
-            Map<String, String> properties = new HashMap<>();
-            putBoolean(properties, WorkerConfig.TOPIC_CREATION_ENABLE_CONFIG, enabled);
+            StringMap properties = new StringMap();
+            properties.putBoolean(WorkerConfig.TOPIC_CREATION_ENABLE_CONFIG, enabled);
             return properties;
         }
     }
@@ -607,8 +607,8 @@ public class KafkaConnectProperties {
 
         public Map<String, String> buildProperties() {
 
-            Map<String, String> properties = new HashMap<>();
-            putString(properties, StandaloneConfig.OFFSET_STORAGE_FILE_FILENAME_CONFIG, offsetStorageFileName);
+            StringMap properties = new StringMap();
+            properties.putString(StandaloneConfig.OFFSET_STORAGE_FILE_FILENAME_CONFIG, offsetStorageFileName);
             return properties;
         }
 
