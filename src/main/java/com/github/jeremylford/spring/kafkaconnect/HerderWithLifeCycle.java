@@ -37,7 +37,8 @@ import org.springframework.util.ReflectionUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.lang.reflect.Field;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
@@ -46,15 +47,11 @@ import java.util.Map;
 public class HerderWithLifeCycle implements Herder {
 
     private final Herder delegate;
-    private final Method isLeaderMethod;
-    private final Method configMethod;
-    private final Field configStateField;
+    private final MethodHandle isLeaderMethod;
 
     public HerderWithLifeCycle(Herder delegate) {
         this.delegate = delegate;
         this.isLeaderMethod = findIsLeaderMethod(delegate);
-        this.configStateField = findConfigStateField(delegate);
-        this.configMethod = findConfigMethod(delegate);
     }
 
 
@@ -240,62 +237,29 @@ public class HerderWithLifeCycle implements Herder {
         boolean result = true;
         if (herder instanceof DistributedHerder) {
             if (isLeaderMethod != null) {
-                result = (boolean) ReflectionUtils.invokeMethod(isLeaderMethod, herder);
+                try {
+                    result = (boolean) isLeaderMethod.invoke(herder);
+                } catch (Throwable e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
         return result;
     }
 
-//    private ClusterConfigState getClusterConfigState(Herder herder) {
-//        ClusterConfigState result = null;
-//
-//        if (herder instanceof DistributedHerder) {
-//            if (configStateField != null) {
-//                result = (ClusterConfigState) ReflectionUtils.getField(configStateField, herder);
-//            }
-//        }
-//
-//        return result;
-//    }
-
-//    private Map<String, String> getConnectorConfiguration(Herder herder, String connectorName) {
-//        Map<String, String> result = Collections.emptyMap();
-//
-//        if (herder instanceof DistributedHerder) {
-//            if (configMethod != null) {
-//                result = (Map<String, String>) ReflectionUtils.invokeMethod(configMethod, herder, connectorName);
-//            }
-//        }
-//
-//        return result;
-//    }
-
     @VisibleForTesting
-    Method findConfigMethod(Herder delegate) {
-        Method configMethod = ReflectionUtils.findMethod(delegate.getClass(), "config");
-        if (configMethod != null) {
-            configMethod.setAccessible(true);
-        }
-        return configMethod;
-    }
-
-    @VisibleForTesting
-    Field findConfigStateField(Herder delegate) {
-        Field configStateField;
-        configStateField = ReflectionUtils.findField(delegate.getClass(), "configState");
-        if (configStateField != null) {
-            configStateField.setAccessible(true);
-        }
-        return configStateField;
-    }
-
-    @VisibleForTesting
-    Method findIsLeaderMethod(Herder delegate) {
+    MethodHandle findIsLeaderMethod(Herder delegate) {
         Method isLeaderMethod = ReflectionUtils.findMethod(delegate.getClass(), "isLeader");
         if (isLeaderMethod != null) {
             isLeaderMethod.setAccessible(true);
+            try {
+                return MethodHandles.lookup().unreflect(isLeaderMethod);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            } finally {
+                isLeaderMethod.setAccessible(false);
+            }
         }
-
-        return isLeaderMethod;
+        return null;
     }
 }

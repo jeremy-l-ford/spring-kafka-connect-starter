@@ -7,13 +7,11 @@ import org.apache.kafka.connect.runtime.distributed.DistributedHerder;
 import org.apache.kafka.connect.runtime.standalone.StandaloneHerder;
 import org.junit.Test;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodHandle;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class HerderWithLifeCycleTest {
 
@@ -30,25 +28,22 @@ public class HerderWithLifeCycleTest {
     }
 
     @Test
-    public void isLeader_distributedHerder() throws Exception {
+    public void isLeader_distributedHerder() throws Throwable {
 
-        Method isLeaderMethod = mock(Method.class);
-        Field clusterState = mock(Field.class);
+        MethodHandle isLeaderMethod = mock(MethodHandle.class);
 
-        when(isLeaderMethod.invoke(any())).thenReturn(true);
+        doReturn(isLeaderMethod).when(isLeaderMethod).asType(any());
+        doReturn(Boolean.TRUE).when(isLeaderMethod).invoke(any(Herder.class));
+//        when(isLeaderMethod.invoke(any(Herder.class))).thenReturn(Boolean.TRUE);
 
         DistributedHerder distributedHerder = mock(DistributedHerder.class);
 
         HerderWithLifeCycle herderWithLifeCycle = new HerderWithLifeCycle(
                 distributedHerder
         ) {
-            @Override
-            Field findConfigStateField(Herder delegate) {
-                return clusterState;
-            }
 
             @Override
-            Method findIsLeaderMethod(Herder delegate) {
+            MethodHandle findIsLeaderMethod(Herder delegate) {
                 return isLeaderMethod;
             }
         };
